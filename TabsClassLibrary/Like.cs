@@ -1,4 +1,4 @@
-﻿namespace TabsApp.Models
+﻿namespace TabsClassLibrary
 {
     public class Like
     {

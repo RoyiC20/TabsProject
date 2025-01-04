@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using MySql.Data.MySqlClient;
 using TabsApp.Services;
-using TabsApp.Models;
+using TabsClassLibrary;
 using System.Collections.Generic;
 
 namespace TabsApp.Controllers

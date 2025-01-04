@@ -1,20 +1,20 @@
 ﻿@page "/Users"
-@inject IHttpClientFactory HttpClientFactory
-
+@inject IHttpClientFactory HttpClientFactory;
+@using TabsClassLibrary;
 
 <h3>Users list</h3>
 
 <ul>
-    @if (!Users.HasValue)
+    @if (users == null || users.Length == 0)
     {
         <li>Loading...</li>
     }
     else
     {
-        foreach (var item in Users.Value.EnumerateArray())
+        foreach (var item in users)
         {
             <li>
-                <strong>@item.GetProperty("name")</strong>: @item.GetProperty("userID"), @item.GetProperty("role")
+                <strong>@item.Name</strong>: @item.UserID, @item.Role
 
             </li>
         }
@@ -22,7 +22,7 @@
     </ul>
 @code
 {
-    private System.Text.Json.JsonElement? Users;
+    private User[] users;
 
     protected override async Task OnInitializedAsync()
     {
@@ -30,10 +30,17 @@
         var client = HttpClientFactory.CreateClient("API");
 
         // קריאה ל-API והבאת נתונים בפורמט JSON (התאם את ה-URL לפי ה-API שלך)
-        var response = await client.GetStringAsync("api/Users"); // השתמש בנתיב API הרלוונטי
+       // var response = await client.GetStringAsync("api/Users"); // השתמש בנתיב API הרלוונטי
 
         // נניח שה-API מחזיר רשימה של מחרוזות
-        Users = System.Text.Json.JsonDocument.Parse(response).RootElement;
+        //Users = System.Text.Json.JsonDocument.Parse(response).RootElement;
+
+        var response = await client.GetAsync("api/Users");
+        if (response.IsSuccessStatusCode)
+        {
+            users = await response.Content.ReadFromJsonAsync<User[]>();
+        }
+
     }
 }
 

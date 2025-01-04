@@ -1,4 +1,5 @@
-﻿namespace TabsApp.Models
+﻿
+namespace TabsClassLibrary
 {
     public class Artist
     {
