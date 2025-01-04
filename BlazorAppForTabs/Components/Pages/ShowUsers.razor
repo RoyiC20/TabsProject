@@ -1,0 +1,41 @@
+﻿@page "/Users"
+@inject IHttpClientFactory HttpClientFactory
+
+
+<h3>Users list</h3>
+
+<ul>
+    @if (!Users.HasValue)
+    {
+        <li>Loading...</li>
+    }
+    else
+    {
+        foreach (var item in Users.Value.EnumerateArray())
+        {
+            <li>
+                <strong>@item.GetProperty("name")</strong>: @item.GetProperty("userID"), @item.GetProperty("role")
+
+            </li>
+        }
+    }
+    </ul>
+@code
+{
+    private System.Text.Json.JsonElement? Users;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // יצירת HttpClient באמצעות IHttpClientFactory שהוגדר ב-Program.cs
+        var client = HttpClientFactory.CreateClient("API");
+
+        // קריאה ל-API והבאת נתונים בפורמט JSON (התאם את ה-URL לפי ה-API שלך)
+        var response = await client.GetStringAsync("api/Users"); // השתמש בנתיב API הרלוונטי
+
+        // נניח שה-API מחזיר רשימה של מחרוזות
+        Users = System.Text.Json.JsonDocument.Parse(response).RootElement;
+    }
+}
+
+
+

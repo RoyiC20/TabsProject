@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.11.35303.130
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TabsApp", "TabsApp\TabsApp.csproj", "{0AC54A5B-3FAD-4907-964F-D396FFE70750}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BlazorAppForTabs", "BlazorAppForTabs\BlazorAppForTabs.csproj", "{B5374F23-32F4-4FB5-B56A-5CCA13C8B550}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{0AC54A5B-3FAD-4907-964F-D396FFE70750}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0AC54A5B-3FAD-4907-964F-D396FFE70750}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0AC54A5B-3FAD-4907-964F-D396FFE70750}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0AC54A5B-3FAD-4907-964F-D396FFE70750}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B5374F23-32F4-4FB5-B56A-5CCA13C8B550}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B5374F23-32F4-4FB5-B56A-5CCA13C8B550}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B5374F23-32F4-4FB5-B56A-5CCA13C8B550}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B5374F23-32F4-4FB5-B56A-5CCA13C8B550}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {54831E45-DFDF-4837-94C7-A6B5905E658B}
+	EndGlobalSection
+EndGlobal
