@@ -7,7 +7,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TabsApp", "TabsApp\TabsApp.
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BlazorAppForTabs", "BlazorAppForTabs\BlazorAppForTabs.csproj", "{B5374F23-32F4-4FB5-B56A-5CCA13C8B550}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TabsClassLibrary", "TabsClassLibrary\TabsClassLibrary.csproj", "{7648850A-D330-4EC3-97B0-370A3B5B2358}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TabsClassLibrary", "TabsClassLibrary\TabsClassLibrary.csproj", "{7648850A-D330-4EC3-97B0-370A3B5B2358}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

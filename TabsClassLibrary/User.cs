@@ -5,5 +5,7 @@
         public int UserID { get; set; } // Primary Key
         public string Name { get; set; } = string.Empty; // User's name
         public string Role { get; set; } = string.Empty; // Role (Teacher or Student)
+        public string Email { get; set; } = string.Empty; // User's email address
+        public string Password { get; set; } = string.Empty; // User's hashed password
     }
 }
