@@ -12,6 +12,9 @@ builder.Services.AddHttpClient("API", client =>
     client.BaseAddress = new Uri("http://localhost:5041/"); // ???? ??? ?? ????? ?-API ???
 });
 
+// Default HttpClient injection
+builder.Services.AddScoped(sp => sp.GetRequiredService<IHttpClientFactory>().CreateClient("API"));
+
 var app = builder.Build();
 
 

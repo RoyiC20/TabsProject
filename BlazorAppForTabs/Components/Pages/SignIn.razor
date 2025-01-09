@@ -1,5 +1,37 @@
 ﻿@page "/signin"
 
+
+<!-- Sticky Navigation Bar -->
+<nav class="navbar navbar-expand-lg navbar-light bg-light sticky-top">
+    <div class="container">
+        <a class="navbar-brand" href="#">TabNest</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav me-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="/">Search</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/mytabs">My Tabs</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/createtab">Create Tab</a>
+                </li>
+            </ul>
+            <ul class="navbar-nav">
+                <li class="nav-item">
+                    <a class="nav-link active" href="/signin">Sign In</a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<!-- Separator Line -->
+<hr class="my-3" />
+
 <div class="d-flex justify-content-center align-items-center vh-100">
     <div class="card shadow" style="width: 22rem; background-color: #ffffff; color: #000;">
         <div class="card-body">

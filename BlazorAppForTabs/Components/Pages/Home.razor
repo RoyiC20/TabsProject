@@ -1,4 +1,6 @@
 ﻿@page "/"
+@inject HttpClient Http
+@using TabsClassLibrary
 
 <!-- Sticky Navigation Bar -->
 <nav class="navbar navbar-expand-lg navbar-light bg-light sticky-top">
@@ -31,15 +33,18 @@
 <!-- Separator Line -->
 <hr class="my-3" />
 
-<!-- Main Content -->
-<div class="container mt-4">
+
+
+
+<!-- main body -->
+<div class="container mt-4 d-flex justify-content-center">
     <!-- Single Card for Search and Songs List -->
-    <div class="card shadow">
+    <div class="card shadow" style="width: 50rem;">
         <div class="card-body">
             <!-- Search Section -->
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <h2 class="mb-0">Search Tabs</h2>
-                <input type="text" class="form-control w-50" placeholder="Search over a million tabs" />
+                <input type="text" class="form-control w-50" @oninput="OnSearchChanged" placeholder="Search over a million tabs" />
             </div>
 
             <!-- Divider -->
@@ -47,29 +52,55 @@
 
             <!-- Songs List -->
             <div class="list-group">
-                <!-- Static Song Items -->
-                <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
-                    <div>
-                        <h5 class="mb-0">Master of Puppets</h5>
-                        <small class="text-muted">Metallica</small>
-                    </div>
-                    <span class="badge bg-success">Easy</span>
-                </a>
-                <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
-                    <div>
-                        <h5 class="mb-0">Nothing Else Matters</h5>
-                        <small class="text-muted">Metallica</small>
-                    </div>
-                    <span class="badge bg-warning">Medium</span>
-                </a>
-                <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
-                    <div>
-                        <h5 class="mb-0">Stairway to Heaven</h5>
-                        <small class="text-muted">Led Zeppelin</small>
-                    </div>
-                    <span class="badge bg-danger">Hard</span>
-                </a>
+                @if (filteredSongs.Any())
+                {
+                    @foreach (var song in filteredSongs)
+                    {
+                        <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                            <div>
+                                <h5>@song.Name</h5>
+                                <small>@song.Artist?.Name</small>
+                            </div>
+                        </a>
+                    }
+                }
+                else
+                {
+                    <p>No songs found.</p>
+                }
             </div>
         </div>
     </div>
 </div>
+
+
+@code {
+    private string searchTerm = string.Empty;
+
+    private List<Song> filteredSongs = new List<Song>();
+
+    private List<Song> songs = new List<Song>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            songs = await Http.GetFromJsonAsync<List<Song>>("api/Songs");
+            filteredSongs = songs; // Initialize filteredSongs with all songs
+            Console.WriteLine($"Fetched {songs.Count} songs from the API."); // Debug log
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error fetching songs: {ex.Message}");
+        }
+    }
+
+
+    private void OnSearchChanged(ChangeEventArgs e)
+    {
+        searchTerm = e.Value?.ToString() ?? string.Empty;
+        filteredSongs = songs
+            .Where(s => s.Name.Contains(searchTerm, StringComparison.OrdinalIgnoreCase))
+            .ToList();
+    }
+}

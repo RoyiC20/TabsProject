@@ -26,7 +26,10 @@ namespace TabsApp.Controllers
             using (MySqlConnection connection = _databaseService.GetConnection())
             {
                 connection.Open();
-                string query = "SELECT SongID, Name, ArtistID FROM songs";
+                string query = @"
+                    SELECT s.SongID, s.Name, s.ArtistID, a.Name AS ArtistName
+                    FROM songs s
+                    LEFT JOIN artists a ON s.ArtistID = a.ArtistID";
                 MySqlCommand command = new MySqlCommand(query, connection);
                 MySqlDataReader reader = command.ExecuteReader();
 
@@ -36,7 +39,12 @@ namespace TabsApp.Controllers
                     {
                         SongID = reader.GetInt32(0),
                         Name = reader.GetString(1),
-                        ArtistID = reader.GetInt32(2)
+                        ArtistID = reader.GetInt32(2),
+                        Artist = new Artist
+                        {
+                            ArtistID = reader.GetInt32(2),
+                            Name = reader.IsDBNull(3) ? null : reader.GetString(3)
+                        }
                     };
                     songs.Add(song);
                 }
