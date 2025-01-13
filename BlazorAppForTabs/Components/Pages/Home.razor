@@ -12,18 +12,18 @@
         <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav me-auto">
                 <li class="nav-item">
-                    <a class="nav-link active" href="/">Search</a>
+                    <a class="nav-link active" href="/">חיפוש</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="/mytabs">My Tabs</a>
+                    <a class="nav-link" href="/mytabs">הטאבים שלי</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="/createtab">Create Tab</a>
+                    <a class="nav-link" href="/createtab">יצירת טאב</a>
                 </li>
             </ul>
             <ul class="navbar-nav">
                 <li class="nav-item">
-                    <a class="nav-link" href="/signin">Sign In</a>
+                    <a class="nav-link" href="/signin">התחברות</a>
                 </li>
             </ul>
         </div>
@@ -33,9 +33,6 @@
 <!-- Separator Line -->
 <hr class="my-3" />
 
-
-
-
 <!-- main body -->
 <div class="container mt-4 d-flex justify-content-center">
     <!-- Single Card for Search and Songs List -->
@@ -43,8 +40,8 @@
         <div class="card-body">
             <!-- Search Section -->
             <div class="d-flex justify-content-between align-items-center mb-4">
-                <h2 class="mb-0">Search Tabs</h2>
-                <input type="text" class="form-control w-50" @oninput="OnSearchChanged" placeholder="Search over a million tabs" />
+                <h2 class="mb-0">חיפוש טאבים</h2>
+                <input type="text" class="form-control w-50" @oninput="OnSearchChanged" placeholder="חפש טאבים ממאגר השירים" />
             </div>
 
             <!-- Divider -->
@@ -66,13 +63,12 @@
                 }
                 else
                 {
-                    <p>No songs found.</p>
+                    <p>לא נמצאו שירים.</p>
                 }
             </div>
         </div>
     </div>
 </div>
-
 
 @code {
     private string searchTerm = string.Empty;
@@ -94,7 +90,6 @@
             Console.WriteLine($"Error fetching songs: {ex.Message}");
         }
     }
-
 
     private void OnSearchChanged(ChangeEventArgs e)
     {
