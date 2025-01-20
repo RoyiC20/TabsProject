@@ -2,28 +2,29 @@
 @inject HttpClient Http
 @using TabsClassLibrary
 
-<!-- Sticky Navigation Bar -->
 <nav class="navbar navbar-expand-lg navbar-light bg-light sticky-top">
     <div class="container">
-        <a class="navbar-brand fw-bold" href="/">TabNest</a>
+        <a class="navbar-brand d-flex align-items-center" href="/">
+            <img src="images/honeycomb2.jpg" alt="Logo" style="width: 40px; height: auto;">
+        </a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
         </button>
-        <div class="collapse navbar-collapse justify-content-between" id="navbarNav">
-            <ul class="navbar-nav w-100 justify-content-around">
-                <li class="nav-item">
-                    <a class="nav-link active text-center" href="/">חיפוש</a>
+        <div class="collapse navbar-collapse w-100" id="navbarNav">
+            <ul class="navbar-nav me-auto">
+                <li class="nav-item px-4 text-center">
+                    <a class="nav-link active" href="/">חיפוש</a>
                 </li>
-                <li class="nav-item">
+                <li class="nav-item px-4">
                     <a class="nav-link text-center" href="/mytabs">הטאבים שלי</a>
                 </li>
-                <li class="nav-item">
+                <li class="nav-item px-4">
                     <a class="nav-link text-center" href="/createtab">יצירת טאב</a>
                 </li>
             </ul>
             <ul class="navbar-nav ms-auto">
                 <li class="nav-item">
-                    <a class="nav-link text-center me-3" href="/signin">התחברות</a>
+                    <a class="nav-link text-center" href="/signin">התחברות</a>
                 </li>
             </ul>
         </div>
@@ -31,8 +32,12 @@
 </nav>
 
 
+
+
+
+
 <!-- Separator Line -->
-<hr class="my-3" />
+<hr class="my-1" />
 
 <!-- Main Body -->
 <div class="container mt-4 d-flex justify-content-center">
@@ -87,6 +92,22 @@
                                         <img src="images/red_circle3.jpg" alt="Hard" style="width: 20px; height: 20px;" />
                                         break;
                                 }
+                                <style>
+                                    .list-group-item {
+                                        border: none; /* Removes the borders around and between items */
+                                        border-bottom: 1px solid transparent; /* Keeps spacing without visible borders */
+                                        transition: background-color 0.2s ease;
+                                    }
+
+                                        .list-group-item:last-child {
+                                            border-bottom: none; /* Ensures the last item has no bottom border */
+                                        }
+
+                                        .list-group-item:hover {
+                                            background-color: #f9f9f9; /* Subtle hover effect */
+                                        }
+                                </style>
+
                             </div>
                         </a>
                         index++;
