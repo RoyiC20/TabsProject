@@ -5,43 +5,54 @@
 <!-- Sticky Navigation Bar -->
 <nav class="navbar navbar-expand-lg navbar-light bg-light sticky-top">
     <div class="container">
-        <a class="navbar-brand" href="#">TabNest</a>
+        <a class="navbar-brand fw-bold" href="/">TabNest</a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
         </button>
-        <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav me-auto">
+        <div class="collapse navbar-collapse justify-content-between" id="navbarNav">
+            <ul class="navbar-nav w-100 justify-content-around">
                 <li class="nav-item">
-                    <a class="nav-link active" href="/">חיפוש</a>
+                    <a class="nav-link active text-center" href="/">חיפוש</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="/mytabs">הטאבים שלי</a>
+                    <a class="nav-link text-center" href="/mytabs">הטאבים שלי</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="/createtab">יצירת טאב</a>
+                    <a class="nav-link text-center" href="/createtab">יצירת טאב</a>
                 </li>
             </ul>
-            <ul class="navbar-nav">
+            <ul class="navbar-nav ms-auto">
                 <li class="nav-item">
-                    <a class="nav-link" href="/signin">התחברות</a>
+                    <a class="nav-link text-center me-3" href="/signin">התחברות</a>
                 </li>
             </ul>
         </div>
     </div>
 </nav>
 
+
 <!-- Separator Line -->
 <hr class="my-3" />
 
-<!-- main body -->
+<!-- Main Body -->
 <div class="container mt-4 d-flex justify-content-center">
-    <!-- Single Card for Search and Songs List -->
-    <div class="card shadow" style="width: 50rem;">
+    <div class="card shadow" style="width: 45rem;">
         <div class="card-body">
             <!-- Search Section -->
-            <div class="d-flex justify-content-between align-items-center mb-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
                 <h2 class="mb-0">חיפוש טאבים</h2>
                 <input type="text" class="form-control w-50" @oninput="OnSearchChanged" placeholder="חפש טאבים ממאגר השירים" />
+            </div>
+
+            <!-- Filter Section -->
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <span>סינון לפי:</span>
+                <select class="form-select w-25" @onchange="OnFilterChanged">
+                    <option value="all">כל הרמות</option>
+                    <option value="easy">קל</option>
+                    <option value="medium">בינוני</option>
+                    <option value="hard">קשה</option>
+                </select>
             </div>
 
             <!-- Divider -->
@@ -51,19 +62,39 @@
             <div class="list-group">
                 @if (filteredSongs.Any())
                 {
+                    int index = 1;
                     @foreach (var song in filteredSongs)
                     {
                         <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                            <div class="d-flex align-items-center">
+                                <span class="me-3">@index.</span>
+                                <div>
+                                    <h5 class="mb-0">@song.Name</h5>
+                                    <small>@song.Artist?.Name</small>
+                                </div>
+                            </div>
+                            <!-- Difficulty Icon -->
                             <div>
-                                <h5>@song.Name</h5>
-                                <small>@song.Artist?.Name</small>
+                                @switch (GetDifficulty(song))
+                                {
+                                    case "easy":
+                                        <img src="images/green_circle.jpg" alt="Easy" style="width: 20px; height: 20px;" />
+                                        break;
+                                    case "medium":
+                                        <img src="images/orange_circle.png" alt="Medium" style="width: 20px; height: 20px;" />
+                                        break;
+                                    case "hard":
+                                        <img src="images/red_circle3.jpg" alt="Hard" style="width: 20px; height: 20px;" />
+                                        break;
+                                }
                             </div>
                         </a>
+                        index++;
                     }
                 }
                 else
                 {
-                    <p>לא נמצאו שירים.</p>
+                    <p class="text-center">לא נמצאו שירים.</p>
                 }
             </div>
         </div>
@@ -72,9 +103,9 @@
 
 @code {
     private string searchTerm = string.Empty;
+    private string selectedFilter = "all";
 
     private List<Song> filteredSongs = new List<Song>();
-
     private List<Song> songs = new List<Song>();
 
     protected override async Task OnInitializedAsync()
@@ -83,7 +114,6 @@
         {
             songs = await Http.GetFromJsonAsync<List<Song>>("api/Songs");
             filteredSongs = songs; // Initialize filteredSongs with all songs
-            Console.WriteLine($"Fetched {songs.Count} songs from the API."); // Debug log
         }
         catch (Exception ex)
         {
@@ -94,8 +124,28 @@
     private void OnSearchChanged(ChangeEventArgs e)
     {
         searchTerm = e.Value?.ToString() ?? string.Empty;
+        ApplyFilters();
+    }
+
+    private void OnFilterChanged(ChangeEventArgs e)
+    {
+        selectedFilter = e.Value?.ToString() ?? "all";
+        ApplyFilters();
+    }
+
+    private void ApplyFilters()
+    {
         filteredSongs = songs
-            .Where(s => s.Name.Contains(searchTerm, StringComparison.OrdinalIgnoreCase))
+            .Where(s => s.Name.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) &&
+                        (selectedFilter == "all" || GetDifficulty(s) == selectedFilter))
             .ToList();
+    }
+
+    private string GetDifficulty(Song song)
+    {
+        // Replace this with actual difficulty logic from your backend or database
+        if (song.Name.Contains("Imagine")) return "easy";
+        if (song.Name.Contains("Let It Be")) return "medium";
+        return "hard";
     }
 }
