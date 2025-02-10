@@ -1,4 +1,8 @@
 ﻿@page "/signup"
+@inject NavigationManager Navigation
+@inject HttpClient Http
+@rendermode InteractiveServer
+@using TabsClassLibrary
 
 <nav class="navbar navbar-expand-lg navbar-light bg-light sticky-top">
     <div class="container">
@@ -49,26 +53,65 @@
                 <!-- Name Input -->
                 <div class="mb-3">
                     <label for="name" class="form-label">שם משתמש</label>
-                    <input type="text" id="name" class="form-control" placeholder="הכנס שם משתמש" />
+                    <input type="text" id="name" @bind = "name" class="form-control" placeholder="הכנס שם משתמש" />
                 </div>
 
                 <!-- Email Input -->
                 <div class="mb-3">
                     <label for="email" class="form-label">דוא"ל</label>
-                    <input type="email" id="email" class="form-control" placeholder="הכנס את הדואל" />
+                    <input type="email" id="email" @bind = "email" class="form-control" placeholder="הכנס את הדואל" />
                 </div>
 
                 <!-- Password Input -->
                 <div class="mb-3">
                     <label for="password" class="form-label">סיסמה</label>
-                    <input type="password" id="password" class="form-control" placeholder="הכנס סיסמה" />
+                    <input type="password" @bind = "password" id="password" class="form-control" placeholder="הכנס סיסמה" />
                 </div>
 
                 <!-- Submit Button -->
                 <div class="d-grid">
-                    <button type="button" class="btn btn-warning text-dark fw-bold">הירשם</button>
+                    <button type="button" @onclick="HandleRegister" class="btn btn-warning text-dark fw-bold">הירשם</button>
                 </div>
             </form>
         </div>
     </div>
 </div>
+
+
+@code
+{
+    private string name = string.Empty;
+    private string email = string.Empty;
+    private string password = string.Empty;
+    private string role = "Student"; // Default role
+    private string errorMessage = string.Empty;
+
+    private async Task HandleRegister()
+    {
+        Console.WriteLine($"Register attempt with Name: {name}, Email: {email}, Role: {role}");
+
+        try
+        {
+            var response = await Http.PostAsJsonAsync("api/Users/add", new { Name = name, Role = role, Email = email, Password = password });
+
+            Console.WriteLine($"Response status code: {response.StatusCode}"); // Debugging
+
+            if (response.IsSuccessStatusCode)
+            {
+                var result = await response.Content.ReadFromJsonAsync<dynamic>();
+                Console.WriteLine($"Registration successful: {result}");
+                Navigation.NavigateTo("/"); // Redirect to login page after registration
+            }
+            else
+            {
+                errorMessage = "הרשמה נכשלה, נסה שוב";
+                Console.WriteLine($"Registration failed: {response.StatusCode}"); // Debugging
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = "שגיאה בעת ההרשמה";
+            Console.WriteLine($"Error during registration: {ex.Message}"); // Debugging
+        }
+    }
+}

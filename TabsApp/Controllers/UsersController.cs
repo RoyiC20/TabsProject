@@ -3,6 +3,8 @@ using MySql.Data.MySqlClient;
 using TabsApp.Services;
 using TabsClassLibrary;
 using System.Collections.Generic;
+using Microsoft.AspNetCore.Identity;
+using Org.BouncyCastle.Bcpg;
 
 namespace TabsApp.Controllers
 {
@@ -108,5 +110,50 @@ namespace TabsApp.Controllers
 
             return Ok(users);
         }
+
+
+        [HttpPost("add")]
+        public IActionResult AddUser(User newUser)
+        {
+            Console.WriteLine("AddUser endpoint called."); // Debug: Endpoint entry
+
+            using (MySqlConnection connection = _databaseService.GetConnection())
+            {
+                try
+                {
+                    connection.Open();
+                    Console.WriteLine("Database connection opened."); // Debug: DB connection success
+
+                    // Insert new user into the database
+                    string query = "INSERT INTO users (Name, Role, Email, Password) VALUES (@Name, @Role, @Email, @Password)";
+                    MySqlCommand command = new MySqlCommand(query, connection);
+                    command.Parameters.AddWithValue("@Name", newUser.Name);
+                    command.Parameters.AddWithValue("@Role", "student");
+                    command.Parameters.AddWithValue("@Email", newUser.Email);
+                    command.Parameters.AddWithValue("@Password", newUser.Password); // Hash this in production
+
+                    int rowsAffected = command.ExecuteNonQuery();
+                    Console.WriteLine($"Rows affected: {rowsAffected}"); // Debug: Rows inserted
+
+                    if (rowsAffected > 0)
+                    {
+                        return Ok(new { Message = "User added successfully", User = newUser});
+                    }
+                    else
+                    {
+                        return BadRequest(new { Message = "Failed to add user" });
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error adding user: {ex.Message}"); // Debug: Exception
+                    return StatusCode(500, new { Message = "Internal server error" });
+                }
+            }
+        }
+
     }
+
+
 }
+
