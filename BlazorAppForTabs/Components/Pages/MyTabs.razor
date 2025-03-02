@@ -1,4 +1,7 @@
 ﻿@page "/mytabs"
+@inject NavigationManager Navigation
+@using BlazorAppForTabs.Services
+@inject UserService UserService
 
 <!-- Sticky Navigation Bar -->
 <nav class="navbar navbar-expand-lg navbar-light bg-light sticky-top">
@@ -22,9 +25,23 @@
                 </li>
             </ul>
             <ul class="navbar-nav ms-auto">
-                <li class="nav-item">
-                    <a class="nav-link text-center" href="/signin">התחברות</a>
-                </li>
+                @if (string.IsNullOrEmpty(UserService.UserName))
+                {
+                    <li class="nav-item">
+                        <span class="nav-link">שלום, אורח</span>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/signin">התחברות</a>
+                    </li>
+
+                }
+                else
+                {
+                    <li class="nav-item">
+                        <span class="nav-link text-center">שלום, @UserService.UserName</span>
+                    </li>
+                }
+                
             </ul>
         </div>
     </div>
@@ -47,7 +64,6 @@
                 <h2>הטאבים שלי</h2>
             </div>
 
-            <!-- Tabs for Favorites and Submitted -->
             <ul class="nav nav-tabs" id="myTabs" role="tablist">
                 <li class="nav-item" role="presentation">
                     <button class="nav-link active" id="favorites-tab" data-bs-toggle="tab" data-bs-target="#favorites" type="button" role="tab" aria-controls="favorites" aria-selected="true">
@@ -69,7 +85,6 @@
                         <div class="card-body">
                             <h5>טאבים מועדפים</h5>
                             <ul class="list-group">
-                                <!-- Static Example Items -->
                                 <li class="list-group-item d-flex justify-content-between align-items-center">
                                     Master of Puppets - Metallica
                                     <span class="badge bg-success">קל</span>
@@ -93,7 +108,6 @@
                         <div class="card-body">
                             <h5>טאבים שהועלו</h5>
                             <ul class="list-group">
-                                <!-- Static Example Items -->
                                 <li class="list-group-item d-flex justify-content-between align-items-center">
                                     Fade to Black - Metallica
                                     <span class="badge bg-warning">בינוני</span>
@@ -107,6 +121,7 @@
                     </div>
                 </div>
             </div>
-        </div>
+
+          </div>
     </div>
 </div>

@@ -1,4 +1,9 @@
 ﻿@page "/createtab"
+@using BlazorAppForTabs.Services
+@inject UserService UserService
+
+@inject NavigationManager Navigation
+
 
 <!-- Sticky Navigation Bar -->
 <nav class="navbar navbar-expand-lg navbar-light bg-light sticky-top">
@@ -23,12 +28,22 @@
             </ul>
             <ul class="navbar-nav ms-auto">
                 <li class="nav-item">
-                    <a class="nav-link text-center" href="/signin">התחברות</a>
+                    @if (string.IsNullOrEmpty(UserService.UserName))
+                    {
+                        <span class="nav-link text-center">שלום, אורח</span>
+                        <a class="nav-link text-center" href="/signin">התחברות</a>
+                    }
+                    else
+                    {
+                        <span class="nav-link text-center">שלום, @UserService.UserName</span>
+                    }
                 </li>
+                
             </ul>
         </div>
     </div>
 </nav>
+
 
 
 

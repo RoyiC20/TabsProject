@@ -91,7 +91,7 @@ namespace TabsApp.Controllers
                         {
                             UserID = reader.GetInt32(0),
                             Name = reader.GetString(1),
-                            Role = reader.GetString(2),
+                            Role = Enum.TryParse(reader.GetString(2), out UserRole role) ? role : UserRole.User, // Default to User if invalid role
                             Email = reader.GetString(3), // Fetch Email
                             Password = reader.GetString(4) // Fetch Password
                         };
