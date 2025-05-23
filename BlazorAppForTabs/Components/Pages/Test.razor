@@ -1,0 +1,13 @@
+﻿@page "/test"
+@rendermode InteractiveServer
+
+<h3>בדיקת כפתור</h3>
+<button @onclick="HandleClick">לחץ כאן</button>
+
+@code {
+    private void HandleClick()
+    {
+        Console.WriteLine("נלחץ!");
+    }
+}
+    

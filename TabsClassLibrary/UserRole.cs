@@ -8,7 +8,8 @@ namespace TabsClassLibrary
 {
     public enum UserRole
     {
-        User,
+        Teacher,
+        Student,
         Admin
     }
 }

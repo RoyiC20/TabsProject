@@ -1,30 +1,58 @@
-﻿<div class="top-row ps-3 navbar navbar-dark">
+﻿@using TabsClassLibrary
+@using BlazorAppForTabs.Services
+@inject NavigationManager Navigation
+@inject UserService UserService
+@rendermode InteractiveServer
+
+<nav class="navbar navbar-expand-lg navbar-light bg-light sticky-top">
     <div class="container-fluid">
-        <a class="navbar-brand" href="">BlazorAppForTabs</a>
+        <a class="navbar-brand d-flex align-items-center" href="/">
+            <img src="images/honeycomb2.jpg" alt="Logo" style="width: 40px; height: auto;">
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav me-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="/">חיפוש</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/mytabs">הטאבים שלי</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/createtab">יצירת טאב</a>
+                </li>
+            </ul>
+            <ul class="navbar-nav ms-auto">
+                @if (string.IsNullOrEmpty(UserService.UserName))
+                {
+                    <li class="nav-item">
+                        <span class="nav-link disabled">שלום, אורח</span>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/signin">התחברות</a>
+                    </li>
+                }
+                else
+                {
+                    <li class="nav-item">
+                        <span class="nav-link">שלום, @UserService.UserName</span>
+                    </li>
+                    <li class="nav-item">
+                        <button type="button" class="btn btn-outline-danger" @onclick="Logout">התנתקות</button>
+                    </li>
+                }
+            </ul>
+        </div>
     </div>
-</div>
+</nav>
 
-<input type="checkbox" title="Navigation menu" class="navbar-toggler" />
-
-<div class="nav-scrollable" onclick="document.querySelector('.navbar-toggler').click()">
-    <nav class="flex-column">
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Home
-            </NavLink>
-        </div>
-
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="/mytabs">
-                <span class="bi bi-music-note-list" aria-hidden="true"></span> My Tabs
-            </NavLink>
-        </div>
-
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="/Users">
-                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Users
-            </NavLink>
-        </div>
-    </nav>
-</div>
-
+@code {
+    private void Logout()
+    {
+        UserService.ClearUser();
+        Navigation.NavigateTo("/", forceLoad: true);
+    }
+}

@@ -42,7 +42,7 @@ namespace TabsApp.Controllers
                         if (reader.Read())
                         {
                             Console.WriteLine("User found in database."); // Debug: User found
-                            return Ok(new { Message = "Login successful", UserId = reader["UserID"], Name = reader["Name"] });
+                            return Ok(new { Message = "Login successful", UserId = reader["UserID"], Name = reader["Name"], Role = reader["Role"] });
                         }
                         else
                         {
@@ -91,7 +91,7 @@ namespace TabsApp.Controllers
                         {
                             UserID = reader.GetInt32(0),
                             Name = reader.GetString(1),
-                            Role = Enum.TryParse(reader.GetString(2), out UserRole role) ? role : UserRole.User, // Default to User if invalid role
+                            Role = Enum.TryParse(reader.GetString(2), out UserRole role) ? role : UserRole.Student, // Default to User if invalid role
                             Email = reader.GetString(3), // Fetch Email
                             Password = reader.GetString(4) // Fetch Password
                         };

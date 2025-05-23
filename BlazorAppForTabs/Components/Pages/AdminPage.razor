@@ -1,0 +1,85 @@
+﻿@page "/admin"
+@rendermode InteractiveServer
+@using BlazorAppForTabs.Services
+@inject UserService UserService
+
+
+<h1> דף אדמין</h1>
+
+@if (UserService.IsAdmin())
+{
+    <!-- Toggle Buttons -->
+    <div class="btn-group mb-3" role="group">
+        <button class="btn @(showUsers ? "btn-primary" : "btn-outline-primary")" @onclick="ShowUsers">משתמשים</button>
+        <button class="btn @(showUsers ? "btn-outline-primary" : "btn-primary")" @onclick="ShowTabs">טאבים</button>
+    </div>
+
+    <!-- Users List -->
+    @if (showUsers)
+    {
+        <div class="card">
+            <div class="card-header">
+                <h3> רשימת משתמשים</h3>
+            </div>
+            <div class="card-body">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>שם משתמש</th>
+                            <th>אימייל</th>
+                            <th>תפקיד</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- User data will go here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+
+    <!-- Tabs List -->
+    @if (!showUsers)
+    {
+        <div class="card">
+            <div class="card-header">
+                <h3> רשימת טאבים</h3>
+            </div>
+            <div class="card-body">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>שם השיר</th>
+                            <th>אמן</th>
+                            <th>רמת קושי</th>
+                            <th>כלי נגינה</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Tabs data will go here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+}
+else
+{
+    <p>אין לך הרשאה לצפות בדף זה.</p>
+}
+
+@code {
+    private bool showUsers = true;
+
+    private void ShowUsers()
+    {
+        showUsers = true;
+    }
+
+    private void ShowTabs()
+    {
+        showUsers = false;
+    }
+}

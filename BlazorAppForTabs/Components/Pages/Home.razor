@@ -3,56 +3,11 @@
 @using TabsClassLibrary
 @using BlazorAppForTabs.Services
 @inject NavigationManager Navigation
-@rendermode InteractiveServer
 @inject UserService UserService
+@rendermode InteractiveServer
 
 
-<nav class="navbar navbar-expand-lg navbar-light bg-light sticky-top">
-    <div class="container">
-        <a class="navbar-brand d-flex align-items-center" href="/">
-            <img src="images/honeycomb2.jpg" alt="Logo" style="width: 40px; height: auto;">
-        </a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
-                aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse w-100" id="navbarNav">
-            <ul class="navbar-nav me-auto">
-                <li class="nav-item px-4 text-center">
-                    <a class="nav-link active" href="/">חיפוש</a>
-                </li>
-                <li class="nav-item px-4">
-                    <a class="nav-link text-center" href="/mytabs">הטאבים שלי</a>
-                </li>
-                <li class="nav-item px-4">
-                    <a class="nav-link text-center" href="/createtab">יצירת טאב</a>
-                </li>
-            </ul>
-            <ul class="navbar-nav ms-auto">
-                @if (string.IsNullOrEmpty(UserService.UserName))
-                {
-                    <li class="nav-item">
-                        <span class="nav-link">שלום, אורח</span>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/signin">התחברות</a>
-                    </li>
-                }
-                else
-                {
-                    <li class="nav-item">
-                        <span class="nav-link">שלום, @UserService.UserName</span>
-                    </li>
 
-                    <li class="nav-item">
-                        <button type="button" class="btn btn-danger" @onclick="Logout">התנתק</button>
-
-                    </li>                    
-                }
-            </ul>
-        </div>
-    </div>
-</nav>
 
 
 

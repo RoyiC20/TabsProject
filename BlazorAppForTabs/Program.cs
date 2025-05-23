@@ -13,19 +13,27 @@ builder.Services.AddHttpClient("API", client =>
     client.BaseAddress = new Uri("http://localhost:5041/"); // ???? ??? ?? ????? ?-API ???
 });
 
-builder.Services.AddAuthorization(options =>
-{
-    options.AddPolicy("AdminOnly", policy => policy.RequireRole("Admin"));
-    options.AddPolicy("UserOnly", policy => policy.RequireRole("User"));
-    options.AddPolicy("GuestOnly", policy => policy.RequireRole("Guest"));
-});
+// Add cookie-based authentication
+//builder.Services.AddAuthentication("Cookies")
+//    .AddCookie("Cookies", options =>
+//    {
+//        options.LoginPath = "/signin";              // Page shown to users who aren't logged in
+//        options.AccessDeniedPath = "/unauthorized"; // Optional: for users with wrong role
+//    });
+
+
+//builder.Services.AddAuthorization(options =>
+//{
+//    options.AddPolicy("AdminOnly", policy => policy.RequireRole("Admin"));
+//    options.AddPolicy("TeacherOnly", policy => policy.RequireRole("Teacher"));
+//    options.AddPolicy("StudentOnly", policy => policy.RequireRole("Student"));
+//    options.AddPolicy("GuestOnly", policy => policy.RequireRole("Guest"));
+//});
 
 // Default HttpClient injection
 builder.Services.AddScoped(sp => sp.GetRequiredService<IHttpClientFactory>().CreateClient("API"));
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
-
-// ????? ?-UserService ?-Singleton
 builder.Services.AddSingleton<UserService>();
 
 var app = builder.Build();
@@ -40,7 +48,14 @@ if (!app.Environment.IsDevelopment())
 }
 
 app.UseStaticFiles();
+
+app.UseRouting();
+
+//app.UseAuthentication(); // authenticate user via cookies
+//app.UseAuthorization();  // enforce [Authorize] checks
+
 app.UseAntiforgery();
+
 
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();

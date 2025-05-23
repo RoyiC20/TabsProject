@@ -15,6 +15,27 @@
             UserName = string.Empty;
             Role = string.Empty;
         }
+
+
+        public bool IsTeacher()
+        {
+            if (Role == "Teacher")
+            {
+                return true;
+            }
+            return false;
+        }
+
+        public bool IsAdmin()
+        {
+            if(Role == "Admin")
+            {
+                return true;
+
+            }
+            return false;
+        }
+
     }
 
 

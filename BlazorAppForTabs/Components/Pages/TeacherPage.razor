@@ -1,0 +1,39 @@
+﻿@page "/teacher"
+@rendermode InteractiveServer
+@using BlazorAppForTabs.Services
+@inject UserService UserService
+
+
+
+<h1 class="mb-4">דף מורה</h1>
+<p>Role: @UserService.Role</p>
+<p>UserName: @UserService.UserName</p>
+
+@if (UserService.IsTeacher() == false)
+{
+    <p>אין לך הרשאה לצפות בדף זה</p>
+}
+else
+{
+    <div class="card">
+        <div class="card-header">
+            <h3>רשימת טאבים</h3>
+        </div>
+        <div class="card-body">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>שם השיר</th>
+                        <th>אמן</th>
+                        <th>רמת קושי</th>
+                        <th>כלי נגינה</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- כאן תיכנס רשימת הטאבים -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+}
