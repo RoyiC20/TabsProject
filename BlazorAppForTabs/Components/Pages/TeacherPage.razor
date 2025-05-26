@@ -2,6 +2,10 @@
 @rendermode InteractiveServer
 @using BlazorAppForTabs.Services
 @inject UserService UserService
+@inject HttpClient Http
+@using TabsClassLibrary
+@inject IJSRuntime JS
+
 
 
 
@@ -21,19 +25,102 @@ else
         </div>
         <div class="card-body">
             <table class="table table-striped">
-                <thead>
-                    <tr>
-                        <th>#</th>
-                        <th>שם השיר</th>
-                        <th>אמן</th>
-                        <th>רמת קושי</th>
-                        <th>כלי נגינה</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <!-- כאן תיכנס רשימת הטאבים -->
-                </tbody>
+                
+                    @if (songs == null && !loadError)
+                    {
+                        <p><em>טוען רשימת שירים...</em></p>
+                    }
+                    else if (loadError)
+                    {
+                        <p><em>אירעה שגיאה בטעינת השירים. בדוק את המסוף לקבלת פרטים.</em></p>
+                    }
+                    else if (songs != null && !songs.Any())
+                    {
+                        <p><em>לא נמצאו שירים.</em></p>
+                    }
+                    else if (songs != null)
+                    {
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>שם השיר</th>
+                                    <th>אמן</th>
+                                    <th>רמת קושי (מהטאב)</th>
+                                    <th>כלי נגינה (מהטאב)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var (song, index) in songs.Select((item, idx) => (item, idx + 1)))
+                                {
+                                    <tr>
+                                        <td>@index</td>
+                                        <td>@song.Name</td>
+                                        <td>@(song.Artist?.Name ?? "N/A")</td>
+                                        <td>@(song.Tab?.Difficulty ?? "N/A")</td>
+                                        <td>@(song.Tab?.Instrument ?? "N/A")</td>
+                                        <td>
+                                            <button class="btn btn-sm btn-primary me-2">ערוך</button>
+                                            <button class="btn btn-sm btn-danger" @onclick="() => DeleteSong(song.SongID)">מחק</button>
+                                        </td
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    }
+                
             </table>
         </div>
     </div>
+}
+
+
+@code {
+    private List<Song>? songs; // Changed from List<Tab> to List<Song>
+    private bool loadError = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (UserService.IsTeacher())
+        {
+            try
+            {
+                // Assuming your GetSongs() method is mapped to "api/Songs"
+                // If it's in SongsController.cs with a standard [HttpGet] on GetSongs(), this should be correct.
+                songs = await Http.GetFromJsonAsync<List<Song>>("api/Songs");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error loading songs: {ex.Message}");
+                loadError = true;
+                songs = new List<Song>(); // Initialize to empty list on error
+            }
+        }
+    }
+
+
+    private async Task DeleteSong(int songId)
+{
+    var confirmed = await JS.InvokeAsync<bool>("confirm", $"האם אתה בטוח שברצונך למחוק את השיר מספר {songId}?");
+    if (!confirmed)
+        return;
+
+    try
+    {
+        var response = await Http.DeleteAsync($"api/Songs/{songId}");
+        if (response.IsSuccessStatusCode)
+        {
+            songs = songs!.Where(s => s.SongID != songId).ToList();
+        }
+        else
+        {
+            Console.WriteLine("מחיקה נכשלה. קוד: " + response.StatusCode);
+        }
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine("שגיאה במחיקה: " + ex.Message);
+    }
+}
+
 }

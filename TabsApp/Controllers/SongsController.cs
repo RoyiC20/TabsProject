@@ -27,9 +27,12 @@ namespace TabsApp.Controllers
             {
                 connection.Open();
                 string query = @"
-                    SELECT s.SongID, s.Name, s.ArtistID, a.Name AS ArtistName
+                    SELECT s.SongID, s.Name, s.ArtistID, a.Name AS ArtistName, t.difficulty, t.instrument
                     FROM songs s
-                    LEFT JOIN artists a ON s.ArtistID = a.ArtistID";
+                    LEFT JOIN artists a ON s.ArtistID = a.ArtistID
+                    LEFT JOIN tabs t ON s.SongID = t.songID";
+ //                   where t.instrument = "x";
+
                 MySqlCommand command = new MySqlCommand(query, connection);
                 MySqlDataReader reader = command.ExecuteReader();
 
@@ -44,8 +47,14 @@ namespace TabsApp.Controllers
                         {
                             ArtistID = reader.GetInt32(2),
                             Name = reader.IsDBNull(3) ? null : reader.GetString(3)
+                        },
+                        Tab = new Tab
+                        {
+                            Difficulty = reader.GetString(4),
+                            Instrument = reader.GetString(5)
                         }
-                    };
+
+                    }; 
                     songs.Add(song);
                 }
 
@@ -54,5 +63,28 @@ namespace TabsApp.Controllers
 
             return Ok(songs);
         }
+
+
+
+        [HttpDelete("{id}")]
+        public IActionResult DeleteSong(int id)
+        {
+            try
+            {
+                bool success = _databaseService.DeleteSongWithTabs(id);
+                if (success)
+                    return Ok();
+                else
+                    return NotFound();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("שגיאה במחיקה: " + ex.Message);
+                return StatusCode(500, "שגיאה בשרת");
+            }
+        }
+
+
+
     }
 }

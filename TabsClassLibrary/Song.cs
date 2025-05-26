@@ -8,5 +8,7 @@
 
         // Navigation property
         public Artist? Artist { get; set; }
+
+        public Tab? Tab { get; set; }
     }
 }

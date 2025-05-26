@@ -2,6 +2,10 @@
 @rendermode InteractiveServer
 @using BlazorAppForTabs.Services
 @inject UserService UserService
+@inject HttpClient Http
+@using TabsClassLibrary
+@inject IJSRuntime JS
+
 
 
 <h1> דף אדמין</h1>
@@ -29,10 +33,36 @@
                             <th>שם משתמש</th>
                             <th>אימייל</th>
                             <th>תפקיד</th>
+                            <th>פעולות</th> 
+
                         </tr>
                     </thead>
                     <tbody>
-                        <!-- User data will go here -->
+                        @if (users == null)
+                        {
+                            <tr><td colspan="4">טוען משתמשים...</td></tr>
+                        }
+                        else if (!users.Any())
+                        {
+                            <tr><td colspan="4">לא נמצאו משתמשים.</td></tr>
+                        }
+                        else
+                        {
+                            @foreach (var (user, index) in users.Select((u, i) => (u, i + 1)))
+                            {
+                                <tr>
+                                    <td>@index</td>
+                                    <td>@user.Name</td>
+                                    <td>@user.Email</td>
+                                    <td>@user.Role</td>
+                                    <td>
+                                        <button class="btn btn-sm btn-primary" @onclick="() => EditUser(user.UserID)">ערוך</button>
+                                        <button class="btn btn-sm btn-danger" @onclick="() => DeleteUser(user.UserID)">מחק</button>
+                                    </td>
+                                </tr>
+                            }
+                        }
+
                     </tbody>
                 </table>
             </div>
@@ -55,10 +85,39 @@
                             <th>אמן</th>
                             <th>רמת קושי</th>
                             <th>כלי נגינה</th>
+                            <th>פעולות</th>
                         </tr>
                     </thead>
+
                     <tbody>
-                        <!-- Tabs data will go here -->
+                            @if (songs == null && !loadError)
+                            {
+                                <tr><td colspan="5"><em>טוען טאבים...</em></td></tr>
+                            }
+                            else if (loadError)
+                            {
+                                <tr><td colspan="5"><em>אירעה שגיאה בטעינת הטאבים.</em></td></tr>
+                            }
+                            else if (songs != null && !songs.Any())
+                            {
+                                <tr><td colspan="5"><em>לא נמצאו טאבים.</em></td></tr>
+                            }
+                            else
+                            {
+                                @foreach (var (song, index) in songs.Select((s, i) => (s, i + 1)))
+                                {
+                                    <tr>
+                                        <td>@index</td>
+                                        <td>@song.Name</td>
+                                        <td>@(song.Artist?.Name ?? "N/A")</td>
+                                        <td>@(song.Tab?.Difficulty ?? "N/A")</td>
+                                        <td>@(song.Tab?.Instrument ?? "N/A")</td>
+                                        <td>
+                                            <button class="btn btn-sm btn-danger" @onclick="() => DeleteTab(song.SongID)">מחק</button>
+                                        </td>
+                                    </tr>
+                                }
+                            }
                     </tbody>
                 </table>
             </div>
@@ -70,16 +129,213 @@ else
     <p>אין לך הרשאה לצפות בדף זה.</p>
 }
 
-@code {
-    private bool showUsers = true;
 
-    private void ShowUsers()
-    {
-        showUsers = true;
-    }
 
-    private void ShowTabs()
-    {
-        showUsers = false;
-    }
+
+@if (isEditModalOpen && userToEdit != null)
+{
+    <div class="modal show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5); position: fixed; top:0; left:0; width:100%; height:100%;">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">עריכת משתמש</h5>
+                    <button type="button" class="btn-close" @onclick="CloseEditModal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label>שם</label>
+                        <input class="form-control" @bind="userToEdit.Name" />
+                    </div>
+                    <div class="mb-3">
+                        <label>אימייל</label>
+                        <input class="form-control" @bind="userToEdit.Email" />
+                    </div>
+                    <div class="mb-3">
+                        <label>תפקיד</label>
+                        <select class="form-select" @bind="userToEdit.Role">
+                            @foreach (UserRole role in Enum.GetValues(typeof(UserRole)))
+                            {
+                                <option value="@role">@role</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label>סיסמה חדשה</label>
+                        <input type="password" class="form-control" @bind="newPassword" />
+                        <button class="btn btn-warning mt-2" @onclick="ChangePassword">שנה סיסמה</button>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-primary" @onclick="SaveUserChanges">אישור</button>
+                    <button class="btn btn-secondary" @onclick="CloseEditModal">ביטול</button>
+                </div>
+            </div>
+        </div>
+    </div>
 }
+
+
+
+
+
+@code 
+{
+
+
+
+    private bool isEditModalOpen = false;
+    private User? userToEdit = null;
+    private string newPassword = string.Empty;
+
+    private bool showUsers = true;
+    private List<Song>? songs; // לכל שיר יש טאב בפנים
+    private bool loadError = false;
+
+    private void ShowUsers() => showUsers = true;
+    private void ShowTabs() => showUsers = false;
+    private List<User>? users;
+
+
+
+
+
+    private void EditUser(int userId)
+    {
+        userToEdit = users?.FirstOrDefault(u => u.UserID == userId);
+        isEditModalOpen = true;
+        newPassword = string.Empty;
+    }
+
+    private void CloseEditModal()
+    {
+        isEditModalOpen = false;
+        userToEdit = null;
+        newPassword = string.Empty;
+    }
+
+
+    private async Task SaveUserChanges()
+    {
+        if (userToEdit == null)
+            return;
+
+        var response = await Http.PutAsJsonAsync($"api/Users/{userToEdit.UserID}", userToEdit);
+
+        if (response.IsSuccessStatusCode)
+        {
+            var updatedUser = await response.Content.ReadFromJsonAsync<User>();
+            var index = users!.FindIndex(u => u.UserID == updatedUser!.UserID);
+            if (index >= 0)
+                users[index] = updatedUser;
+
+            CloseEditModal();
+        }
+        else
+        {
+            await JS.InvokeVoidAsync("alert", "שגיאה בעדכון המשתמש");
+        }
+    }
+
+
+
+    private async Task ChangePassword()
+    {
+        if (string.IsNullOrWhiteSpace(newPassword) || userToEdit == null)
+            return;
+
+        var payload = new { Password = newPassword };
+        var response = await Http.PutAsJsonAsync($"api/Users/{userToEdit.UserID}/password", payload);
+
+        if (response.IsSuccessStatusCode)
+        {
+            await JS.InvokeVoidAsync("alert", "הסיסמה עודכנה בהצלחה");
+            newPassword = string.Empty;
+        }
+        else
+        {
+            await JS.InvokeVoidAsync("alert", "אירעה שגיאה בעדכון הסיסמה");
+        }
+    }
+
+
+
+
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (UserService.IsAdmin())
+        {
+            try
+            {
+                songs = await Http.GetFromJsonAsync<List<Song>>("api/Songs");
+                users = await Http.GetFromJsonAsync<List<User>>("api/Users");
+
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"שגיאה בטעינת הטאבים: {ex.Message}");
+                loadError = true;
+            }
+        }
+    }
+
+
+    private async Task DeleteUser(int userId)
+    {
+        if (userId == UserService.UserId)
+        {
+            await JS.InvokeVoidAsync("alert", "לא ניתן למחוק את עצמך.");
+            return;
+        }
+
+
+        var confirm = await JS.InvokeAsync<bool>("confirm", $"האם אתה בטוח שברצונך למחוק את המשתמש הזה?");
+        if (!confirm) return;
+
+        try
+        {
+            var response = await Http.DeleteAsync($"api/Users/{userId}");
+            if (response.IsSuccessStatusCode)
+            {
+                users = users!.Where(u => u.UserID != userId).ToList();
+            }
+            else
+            {
+                Console.WriteLine($"שגיאה במחיקת משתמש: {response.StatusCode}");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("שגיאה בשרת בעת מחיקת משתמש: " + ex.Message);
+        }
+    }
+
+
+
+
+    private async Task DeleteTab(int songId)
+    {
+        var confirm = await JS.InvokeAsync<bool>("confirm", $"האם אתה בטוח שברצונך למחוק את השיר ואת הטאב שלו?");
+        if (!confirm) return;
+
+        try
+        {
+            var response = await Http.DeleteAsync($"api/Songs/{songId}");
+            if (response.IsSuccessStatusCode)
+            {
+                songs = songs!.Where(s => s.SongID != songId).ToList();
+            }
+            else
+            {
+                Console.WriteLine($"שגיאה במחיקה: {response.StatusCode}");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("שגיאה בשרת: " + ex.Message);
+        }
+    }
+
+}
+

@@ -86,7 +86,6 @@ namespace TabsApp.Controllers
 
                     while (reader.Read())
                     {
-                        Console.WriteLine($"Fetching user: {reader["Name"]}"); // Debug: User data
                         var user = new User
                         {
                             UserID = reader.GetInt32(0),
@@ -99,7 +98,6 @@ namespace TabsApp.Controllers
                     }
 
                     reader.Close();
-                    Console.WriteLine("Users fetched successfully."); // Debug: Success
                 }
                 catch (Exception ex)
                 {
@@ -151,6 +149,85 @@ namespace TabsApp.Controllers
                 }
             }
         }
+
+
+        [HttpPut("{id}/password")]
+        public IActionResult UpdatePassword(int id, [FromBody] PasswordUpdateModel model)
+        {
+            using var connection = _databaseService.GetConnection();
+            connection.Open();
+
+            var cmd = new MySqlCommand("UPDATE users SET Password = @Password WHERE UserID = @UserID", connection);
+            cmd.Parameters.AddWithValue("@Password", model.Password);
+            cmd.Parameters.AddWithValue("@UserID", id);
+
+            int rows = cmd.ExecuteNonQuery();
+            if (rows > 0)
+                return Ok();
+            else
+                return NotFound();
+        }
+
+        public class PasswordUpdateModel
+        {
+            public string Password { get; set; }
+        }
+
+
+
+        [HttpPut("{id}")]
+        public IActionResult UpdateUser(int id, [FromBody] User user)
+        {
+            using var connection = _databaseService.GetConnection();
+            connection.Open();
+
+            var cmd = new MySqlCommand("UPDATE users SET Name = @Name, Email = @Email, Role = @Role WHERE UserID = @UserID", connection);
+            cmd.Parameters.AddWithValue("@Name", user.Name);
+            cmd.Parameters.AddWithValue("@Email", user.Email);
+            cmd.Parameters.AddWithValue("@Role", user.Role.ToString());
+            cmd.Parameters.AddWithValue("@UserID", id);
+
+
+            int rows = cmd.ExecuteNonQuery();
+            if (rows > 0)
+                return Ok(user);
+            else
+                return NotFound();
+        }
+
+
+
+
+        [HttpDelete("{id}")]
+        public IActionResult DeleteUser(int id)
+        {
+            try
+            {
+                using var connection = _databaseService.GetConnection();
+                connection.Open();
+
+                string query = "DELETE FROM users WHERE UserID = @id";
+                using var command = new MySqlCommand(query, connection);
+                command.Parameters.AddWithValue("@id", id);
+
+                int rowsAffected = command.ExecuteNonQuery();
+                if (rowsAffected > 0)
+                {
+                    return Ok(new { Message = "User deleted successfully" });
+                }
+                else
+                {
+                    return NotFound(new { Message = "User not found" });
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("שגיאה במחיקת משתמש: " + ex.Message);
+                return StatusCode(500, new { Message = "Internal server error" });
+            }
+        }
+
+
 
     }
 

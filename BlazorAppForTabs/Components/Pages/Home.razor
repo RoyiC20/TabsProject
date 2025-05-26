@@ -145,10 +145,10 @@
     private string GetDifficulty(Song song)
     {
         // Replace this with actual difficulty logic from your backend or database
-        if (song.Name.Contains("Imagine")) return "easy";
-        if (song.Name.Contains("Let It Be")) return "medium";
+        if (song.Tab.Difficulty == "Easy") return "easy";
+        if (song.Tab.Difficulty == "Medium") return "medium";
         return "hard";
-    }
+    }   
 
 
 
