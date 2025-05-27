@@ -14,12 +14,25 @@
 {
     <!-- Toggle Buttons -->
     <div class="btn-group mb-3" role="group">
-        <button class="btn @(showUsers ? "btn-primary" : "btn-outline-primary")" @onclick="ShowUsers">משתמשים</button>
-        <button class="btn @(showUsers ? "btn-outline-primary" : "btn-primary")" @onclick="ShowTabs">טאבים</button>
+        <button class="btn @(currentSection == AdminSection.Users ? "btn-primary" : "btn-outline-primary")"
+                @onclick="() => currentSection = AdminSection.Users">
+            משתמשים
+        </button>
+
+        <button class="btn @(currentSection == AdminSection.Tabs ? "btn-primary" : "btn-outline-primary")"
+                @onclick="() => currentSection = AdminSection.Tabs">
+            טאבים
+        </button>
+
+        <button class="btn @(currentSection == AdminSection.Artists ? "btn-primary" : "btn-outline-primary")"
+                @onclick="() => currentSection = AdminSection.Artists">
+            אמנים
+        </button>
+
     </div>
 
     <!-- Users List -->
-    @if (showUsers)
+    @if (currentSection == AdminSection.Users)
     {
         <div class="card">
             <div class="card-header">
@@ -70,7 +83,7 @@
     }
 
     <!-- Tabs List -->
-    @if (!showUsers)
+    @if (currentSection == AdminSection.Tabs)
     {
         <div class="card">
             <div class="card-header">
@@ -132,6 +145,51 @@ else
 
 
 
+@if (currentSection == AdminSection.Artists)
+
+{
+    <div class="card">
+        <div class="card-header">
+            <h3>רשימת אמנים</h3>
+        </div>
+        <div class="card-body">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>ID</th>
+                        <th>שם אמן</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (artists == null)
+                    {
+                        <tr><td colspan="3">טוען אמנים...</td></tr>
+                    }
+                    else if (!artists.Any())
+                    {
+                        <tr><td colspan="3">לא נמצאו אמנים.</td></tr>
+                    }
+                    else
+                    {
+                        @foreach (var (artist, index) in artists.Select((a, i) => (a, i + 1)))
+                        {
+                            <tr>
+                                <td>@index</td>
+                                <td>@artist.ArtistID</td>
+                                <td>@artist.Name</td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}
+
+
+
+
 @if (isEditModalOpen && userToEdit != null)
 {
     <div class="modal show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5); position: fixed; top:0; left:0; width:100%; height:100%;">
@@ -187,14 +245,23 @@ else
     private User? userToEdit = null;
     private string newPassword = string.Empty;
 
-    private bool showUsers = true;
-    private List<Song>? songs; // לכל שיר יש טאב בפנים
     private bool loadError = false;
 
-    private void ShowUsers() => showUsers = true;
-    private void ShowTabs() => showUsers = false;
-    private List<User>? users;
+    private enum AdminSection
+    {
+        Users,
+        Tabs,
+        Artists
+    }
+    private AdminSection currentSection = AdminSection.Users;
 
+
+
+    private List<User>? users;
+    private List<Artist>? artists;
+    private List<Song>? songs; 
+
+   
 
 
 
@@ -270,6 +337,8 @@ else
             {
                 songs = await Http.GetFromJsonAsync<List<Song>>("api/Songs");
                 users = await Http.GetFromJsonAsync<List<User>>("api/Users");
+                artists = await Http.GetFromJsonAsync<List<Artist>>("api/Artists");
+
 
             }
             catch (Exception ex)
