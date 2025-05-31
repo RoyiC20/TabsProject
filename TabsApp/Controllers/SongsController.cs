@@ -27,7 +27,7 @@ namespace TabsApp.Controllers
             {
                 connection.Open();
                 string query = @"
-                    SELECT s.SongID, s.Name, s.ArtistID, a.Name AS ArtistName, t.difficulty, t.instrument
+                    SELECT s.SongID, s.Name, s.ArtistID, a.Name AS ArtistName, t.difficulty, t.instrument, t.tabID
                     FROM songs s
                     LEFT JOIN artists a ON s.ArtistID = a.ArtistID
                     LEFT JOIN tabs t ON s.SongID = t.songID";
@@ -47,11 +47,12 @@ namespace TabsApp.Controllers
                         {
                             ArtistID = reader.GetInt32(2),
                             Name = reader.IsDBNull(3) ? null : reader.GetString(3)
-                        },
+                        },  
                         Tab = new Tab
                         {
                             Difficulty = reader.IsDBNull(4) ? "" : reader.GetString(4),
-                            Instrument = reader.IsDBNull(5) ? "" : reader.GetString(5)
+                            Instrument = reader.IsDBNull(5) ? "" : reader.GetString(5),
+                            TabID = reader.GetInt32(6)
                         }
                     };
 

@@ -50,7 +50,7 @@
                     int index = 1;
                     @foreach (var song in filteredSongs)
                     {
-                        <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                        <a href="/currenttab/@song.Tab?.TabID" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
                             <div class="d-flex align-items-center">
                                 <span class="me-3">@index.</span>
                                 <div>
@@ -154,13 +154,7 @@
 
 
     
-    private void Logout()
-    {
-        Console.WriteLine("Logout button clicked!"); // Should print in browser console
-        UserService.ClearUser(); // Clears the user data
-        StateHasChanged(); // Forces UI update
-        Navigation.NavigateTo("/", forceLoad: true); // Redirects to home page
-    }
+    
     
 
 
