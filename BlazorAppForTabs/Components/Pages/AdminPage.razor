@@ -159,6 +159,8 @@ else
                         <th>#</th>
                         <th>ID</th>
                         <th>שם אמן</th>
+                        <th>פעולות</th>
+
                     </tr>
                 </thead>
                 <tbody>
@@ -178,6 +180,9 @@ else
                                 <td>@index</td>
                                 <td>@artist.ArtistID</td>
                                 <td>@artist.Name</td>
+                                <td>
+                                    <button class="btn btn-sm btn-danger" @onclick="() => DeleteArtist(artist.ArtistID)">מחק</button>
+                                </td>
                             </tr>
                         }
                     }
@@ -348,6 +353,44 @@ else
             }
         }
     }
+
+
+
+    private async Task DeleteArtist(int artistId)
+    {
+        var confirm = await JS.InvokeAsync<bool>("confirm", $"האם אתה בטוח שברצונך למחוק את האמן הזה?");
+        if (!confirm) return;
+
+        try
+        {
+            var response = await Http.DeleteAsync($"api/Artists/{artistId}");
+
+            if (response.IsSuccessStatusCode)
+            {
+                artists = artists!.Where(a => a.ArtistID != artistId).ToList();
+            }
+            else if (response.StatusCode == System.Net.HttpStatusCode.BadRequest)
+            {
+                // קרא את הודעת השגיאה מהשרת
+                var error = await response.Content.ReadFromJsonAsync<Dictionary<string, string>>();
+                string message = error != null && error.ContainsKey("Message") ? error["Message"] : ".לא ניתן למחוק אמן שיש לו שירים משויכים";
+                await JS.InvokeVoidAsync("alert", message);
+            }
+            else
+            {
+                await JS.InvokeVoidAsync("alert", "אירעה שגיאה במחיקת האמן.");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("שגיאה כללית במחיקה: " + ex.Message);
+            await JS.InvokeVoidAsync("alert", "שגיאה בשרת.");
+        }
+    }
+
+
+
+
 
 
     private async Task DeleteUser(int userId)

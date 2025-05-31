@@ -2,11 +2,11 @@
 @using BlazorAppForTabs.Services
 @inject UserService UserService
 @rendermode InteractiveServer
-
+@using TabsClassLibrary
+@using System.Text.Json
 @inject NavigationManager Navigation
-
-
-
+@inject HttpClient Http
+@using System.Text.Json.Serialization;
 
 
 
@@ -15,45 +15,382 @@
 
 
 
-<div class="container mt-4">
+<div class="container mt-4" style="text-align: right;">
     <!-- Page Header -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2>יצירת טאב חדש</h2>
+    <div class="d-flex" style="text-align: right;">
+        <h3>יצירת טאב חדש</h3>
     </div>
 
-    <!-- Card Wrapper -->
-    <div class="card shadow">
-        <div class="card-body">
-            <form>
-                <!-- Title Input -->
-                <div class="mb-3">
-                    <label for="title" class="form-label">כותרת</label>
-                    <input type="text" class="form-control" id="title" placeholder="הכנס את שם השיר" />
-                </div>
+    <!-- Centered + Smaller Card Wrapper -->
+    <div class="d-flex justify-content-center">
+        @if (!isStepTwo)
+                {
+        <div class="card shadow" style="width: 100%; max-width: 500px;">
+            <div class="card-body" style="text-align: right;">
 
-                <!-- Artist Input -->
-                <div class="mb-3">
-                    <label for="artist" class="form-label">אמן</label>
-                    <input type="text" class="form-control" id="artist" placeholder="הכנס את שם האמן" />
-                </div>
+                    <form>
+                        <!-- Title Input -->
+                        <div class="mb-3">
+                            <label for="title" class="form-label">כותרת</label>
+                            <input type="text" class="form-control" id="title" placeholder="הכנס את שם השיר"
+                                   style="text-align: right;" @bind="title" />
+                        </div>
 
-                <!-- Optional YouTube Link Input -->
-                <div class="mb-3">
-                    <label for="youtubeLink" class="form-label">קישור למקור ביוטיוב</label>
-                    <input type="text" class="form-control" id="youtubeLink" placeholder="הוסף קישור ליוטיוב (אופציונלי)" />
-                </div>
+                        <!-- Artist Input -->
+                        <div class="mb-3">
+                            <label for="artist" class="form-label">אמן</label>
+                            <input type="text" class="form-control" id="artist" placeholder="הכנס את שם האמן"
+                                   style="text-align: right;" @bind="artist" />
+                        </div>
 
-                <!-- Info Text -->
-                <p class="text-muted">
-                    הטאב שלך יישאר פרטי עד שתבחר לשתף אותו בפומבי.
-                </p>
+                        <!-- Difficulty Selection -->
+                        <div class="mb-3">
+                            <label for="difficulty" class="form-label">רמת קושי</label>
+                            <select class="form-select" id="difficulty" style="text-align: right;" @bind="difficulty">
+                                <option disabled selected value="">בחר רמת קושי</option>
+                                <option value="Easy">קל</option>
+                                <option value="Medium">בינוני</option>
+                                <option value="Hard">קשה</option>
+                            </select>
+                        </div>
 
-                <!-- Buttons -->
-                <div class="d-flex justify-content-end">
-                    <button type="button" class="btn btn-secondary me-2">ביטול</button>
-                    <button type="button" class="btn btn-success">צור</button>
-                </div>
-            </form>
+                        <!-- Instrument Selection -->
+                        <div class="mb-3">
+                            <label for="instrument" class="form-label">כלי נגינה</label>
+                            <select class="form-select" @bind="instrument">
+                                <option disabled selected value="">בחר כלי נגינה</option>
+                                <option value="Guitar">גיטרה</option>
+                                <option value="Bass">בס</option>
+                            </select>
+
+                        </div>
+
+                        <!-- Button -->
+                        <div class="d-flex justify-content-end">
+                            <button type="button" class="btn btn-success" @onclick="CheckAndGoToNextStep">הבא</button>
+                        </div>
+                    </form>
+
+            </div>
         </div>
+        }
+
     </div>
 </div>
+
+
+@if (!string.IsNullOrWhiteSpace(errorMessage))
+{
+    <div class="alert alert-danger text-center fixed-top mt-5 mx-auto" style="max-width: 600px; z-index: 1050;">
+        @errorMessage
+    </div>
+}
+
+
+@if (isStepTwo)
+{
+    <div class="container mt-4">
+        <div class="row justify-content-center">
+
+            <!-- השורה הקודמת (עכשיו בצד ימין) -->
+            <div class="col-md-3 d-none d-md-block">
+                <div class="p-3 border border-dark rounded bg-light shadow">
+                    <h5 class="mb-3 text-center">השורה הקודמת</h5>
+
+                    @{
+                        var lastLine = tabLines.LastOrDefault();
+                    }
+
+                    @foreach (var stringName in GetStringsForInstrument(instrument ?? ""))
+                    {
+                        int? value = stringName switch
+                        {
+                            "E" => lastLine?.E,
+                            "A" => lastLine?.A,
+                            "D" => lastLine?.D,
+                            "G" => lastLine?.G,
+                            "B" => lastLine?.B,
+                            "e" => lastLine?.E2,
+                            _ => null
+                        };
+
+                        <div class="d-flex align-items-center justify-content-center mb-2">
+                            <span style="width: 30px;">@stringName</span>
+                            <hr class="flex-grow-1 mx-2" style="height: 2px; background-color: gray;" />
+                            <span class="px-2" style="min-width: 40px; font-weight: bold;">@(value?.ToString() ?? "--")</span>
+                            <hr class="flex-grow-1 mx-2" style="height: 2px; background-color: gray;" />
+                        </div>
+                    }
+
+
+
+                    <div class="d-flex justify-content-center mt-3">
+                        <button class="btn btn-sm btn-outline-primary" @onclick="EditLastRow">ערוך</button>
+                    </div>
+                </div>
+            </div>
+
+            
+
+
+
+
+            <!-- השורה הנוכחית (במרכז) -->
+            <div class="col-md-6 text-center">
+                <div class="p-3 border border-dark rounded shadow">
+                    <h5 class="mb-3">השורה הנוכחית</h5>
+
+                    @foreach (var stringName in GetStringsForInstrument(instrument ?? ""))
+                    {
+                        <div class="d-flex align-items-center justify-content-center mb-3">
+                            <span style="width: 30px;">@stringName</span>
+                            <hr class="flex-grow-1 mx-2" style="height: 2px; background-color: gray;" />
+                            <input type="text" class="text-center"
+                                   style="width: 40px; height: 40px; border: 2px solid black; border-radius: 6px;"
+                                   value="@currentInput[stringName]"
+                                   @oninput="e => currentInput[stringName] = e.Value?.ToString()" />
+                            <hr class="flex-grow-1 mx-2" style="height: 2px; background-color: gray;" />
+                        </div>
+                    }
+
+
+
+                    <div class="d-flex justify-content-between mt-4">
+                        <button class="btn" style="background-color: #ffdddd; color: red; border: 2px solid red; width: 100px;" @onclick="HandleFinish">
+                            סיום
+                        </button>
+                        <button class="btn"
+                                style="background-color: #ddffdd; color: green; border: 2px solid green; width: 100px;"
+                                @onclick="HandleNextLine">
+                            הכנס שורה
+                        </button>
+
+                    </div>
+                </div>
+            </div>
+
+            <!-- הוראות שימוש (עכשיו בצד שמאל) -->
+            <div class="col-md-3 d-none d-md-block">
+                <div class="p-3 border border-info rounded bg-light shadow">
+                    <h5 class="mb-3 text-center text-primary">הוראות שימוש</h5>
+                    <ul class="px-3" style="font-size: 0.9rem;">
+                        <li>עבור כל מיתר הכנס את מספרי הסריג.</li>
+                        <li>יש להזין רק מספרים בין <strong>0 ל-24</strong>.</li>
+                        <li>לחץ על "שורה הבא" כדי להוסיף שורה חדשה.</li>
+                        <li>אם טעית, לחץ על "ערוך" כדי לתקן את השורה הקודמת.</li>
+                        <li>בסיום, לחץ על "סיום" כדי לשמור את הטאב.</li>
+                    </ul>
+                </div>
+            </div>
+
+        </div>
+    </div>
+}
+
+
+
+
+
+
+
+
+
+
+
+@code
+{
+    private string? instrument;
+    private string? title;
+    private string? artist;
+    private string? difficulty;
+
+
+    private List<TabLine> tabLines = new();
+
+    private Dictionary<string, string?> currentInput = new();
+
+
+    private string? errorMessage;
+
+    private bool isEditConfirmationPending = false;
+
+    private bool isStepTwo = false;
+
+    private string GetTabJson()
+    {
+        return JsonSerializer.Serialize(tabLines);
+    }
+
+    private void GoToNextStep()
+    {
+        var strings = GetStringsForInstrument(instrument ?? "");
+        currentInput = strings.ToDictionary(s => s, s => (string?)null);
+        isStepTwo = true;
+    }
+
+
+    private async Task CheckAndGoToNextStep()
+    {
+        // בדיקה אם כל השדות מלאים
+        if (string.IsNullOrWhiteSpace(title) ||
+            string.IsNullOrWhiteSpace(artist) ||
+            string.IsNullOrWhiteSpace(difficulty) ||
+            string.IsNullOrWhiteSpace(instrument))
+        {
+            errorMessage = "יש למלא את כל השדות לפני ההמשך.";
+            return;
+        }
+
+        // בדיקה אם שם השיר כבר קיים במסד (שלח בקשת GET עם השם)
+        var existing = await Http.GetFromJsonAsync<List<Song>>("api/songs");
+
+        
+        bool exists = await Http.GetFromJsonAsync<bool>($"api/songs/exists?title={Uri.EscapeDataString(title)}&artist={Uri.EscapeDataString(artist)}");
+
+        if (exists)
+        {
+            errorMessage = "שיר בשם הזה עם אותו האמן כבר קיים.";
+            return;
+        }
+
+
+        // הכל תקין – עבור לשלב הבא
+        errorMessage = null;
+        GoToNextStep();
+    }
+
+
+    private void Cancel()
+    {
+        isStepTwo = false;
+    }
+
+
+
+    private void HandleNextLine()
+    {
+        errorMessage = null;
+
+        if (currentInput.Values.All(string.IsNullOrWhiteSpace))
+        {
+            errorMessage = "יש למלא לפחות מיתר אחד.";
+            return;
+        }
+
+        int? ParseInput(string? value)
+        {
+            if (string.IsNullOrWhiteSpace(value)) return null;
+            if (int.TryParse(value, out int num) && num >= 0 && num <= 24)
+                return num;
+            errorMessage = "כל הערכים חייבים להיות מספרים בין 0 ל-24.";
+            return null;
+        }
+
+        var newLine = new TabLine
+        {
+            E = currentInput.ContainsKey("E") ? ParseInput(currentInput["E"]) : null,
+            A = currentInput.ContainsKey("A") ? ParseInput(currentInput["A"]) : null,
+            D = currentInput.ContainsKey("D") ? ParseInput(currentInput["D"]) : null,
+            G = currentInput.ContainsKey("G") ? ParseInput(currentInput["G"]) : null,
+            B = currentInput.ContainsKey("B") ? ParseInput(currentInput["B"]) : null,
+            E2 = currentInput.ContainsKey("e") ? ParseInput(currentInput["e"]) : null
+        };
+
+        if (errorMessage != null) return;
+
+        tabLines.Add(newLine);
+        foreach (var key in currentInput.Keys.ToList())
+            currentInput[key] = null;
+
+        isEditConfirmationPending = false;
+    }
+
+
+    private async Task HandleFinish()
+    {
+        if (string.IsNullOrWhiteSpace(title) || string.IsNullOrWhiteSpace(artist)
+            || string.IsNullOrWhiteSpace(difficulty) || string.IsNullOrWhiteSpace(instrument))
+        {
+            errorMessage = "יש למלא את כל השדות לפני ההמשך.";
+            return;
+        }
+
+        if (tabLines.Count == 0)
+        {
+            errorMessage = "יש להוסיף לפחות שורה אחת.";
+            return;
+        }
+
+        var submission = new TabSubmission
+        {
+            Title = title!,
+            Artist = artist!,
+            Difficulty = difficulty!,
+            Instrument = instrument!,
+            TabLines = tabLines
+        };
+
+        var response = await Http.PostAsJsonAsync("api/tabs", submission);
+
+        if (response.IsSuccessStatusCode)
+        {
+            var result = await response.Content.ReadFromJsonAsync<SubmitResult>();
+            Navigation.NavigateTo($"/currenttab/{result!.tabID}");
+        }
+        else
+        {
+            errorMessage = "אירעה שגיאה בשמירת הטאב.";
+        }
+
+    }
+
+    public class SubmitResult
+    {
+        [JsonPropertyName("tabID")]
+        public int tabID { get; set; }
+    }
+
+
+
+
+    private void EditLastRow()
+    {
+        if (tabLines.Count == 0)
+        {
+            errorMessage = "אין שורות לעריכה.";
+            return;
+        }
+
+        var last = tabLines.Last();
+        var strings = GetStringsForInstrument(instrument ?? "");
+        currentInput = strings.ToDictionary(s => s, s => (string?)null);
+
+        currentInput["E"] = last.E?.ToString();
+        currentInput["A"] = last.A?.ToString();
+        currentInput["D"] = last.D?.ToString();
+        currentInput["G"] = last.G?.ToString();
+
+        if (instrument == "Guitar")
+        {
+            currentInput["B"] = last.B?.ToString();
+            currentInput["e"] = last.E2?.ToString();
+        }
+
+        tabLines.RemoveAt(tabLines.Count - 1);
+        isEditConfirmationPending = false;
+        errorMessage = null;
+    }
+
+
+
+    private string[] GetStringsForInstrument(string instrument)
+    {
+        return instrument switch
+        {
+            "Guitar" => new[] { "E", "A", "D", "G", "B", "e" },
+            "Bass" => new[] { "E", "A", "D", "G" },
+            _ => new[] { "E", "A", "D", "G" }
+        };
+    }
+
+}

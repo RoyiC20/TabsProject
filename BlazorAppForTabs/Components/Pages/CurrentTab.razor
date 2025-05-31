@@ -1,0 +1,115 @@
+﻿@page "/currenttab/{tabID:int}"
+@using TabsClassLibrary
+@inject HttpClient Http
+@using System.Text.Json
+
+
+
+
+
+@if (tab == null)
+{
+    <div class="text-center mt-5">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">טוען...</span>
+        </div>
+        <p class="mt-3">טוען את הטאב...</p>
+    </div>
+}
+else
+{
+    <div class="container mt-5">
+        <div class="card shadow border-0">
+            <div class="card-header bg-primary text-white text-center">
+                <h4>@(tab.Song?.Name ?? "שיר ללא שם") - @(tab.Song?.Artist?.Name ?? "אמן לא ידוע")</h4>
+            </div>
+            <div class="card-body">
+                <p><strong>כלי נגינה:</strong> @tab.Instrument</p>
+                <p><strong>רמת קושי:</strong> @tab.Difficulty</p>
+
+                
+
+                <h5 class="text-center mb-4">תצוגת טאבים</h5>
+
+                <div style="overflow-x: auto;">
+                    @foreach (var stringName in GetStringsForInstrument(tab?.Instrument ?? ""))
+                    {
+                        <div class="d-flex align-items-center justify-content-center mb-2">
+                            <span style="width: 30px;">@stringName</span>
+
+                            @foreach (var line in tabLines)
+                            {
+                                var value = stringName switch
+                                {
+                                    "E" => line.E,
+                                    "A" => line.A,
+                                    "D" => line.D,
+                                    "G" => line.G,
+                                    "B" => line.B,
+                                    "e" => line.E2,
+                                    _ => null
+                                };
+
+
+                                <div style="width: 32px; height: 2px; background-color: lightgray; position: relative; margin: 0 3px;">
+                                    @if (value.HasValue)
+                                    {
+                                        <span style="position: absolute; top: -8px; left: 0; width: 100%; text-align: center; font-size: 0.8rem;">
+                                            @value
+                                        </span>
+                                    }
+                                </div>
+                            }
+                        </div>
+                    }
+
+                </div>
+
+
+            </div>
+        </div>
+    </div>
+}
+
+
+
+@code {
+    [Parameter]
+    public int tabID { get; set; }
+
+    private TabsClassLibrary.Tab? tab;
+
+    private List<TabLine> tabLines = new();
+
+    private string[] GetStringsForInstrument(string instrument)
+    {
+        return instrument switch
+        {
+            "Guitar" => new[] { "E", "A", "D", "G", "B", "e" },
+            "Bass" => new[] { "E", "A", "D", "G" },
+            _ => new[] { "E", "A", "D", "G" }
+        };
+    }
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        tab = await Http.GetFromJsonAsync<TabsClassLibrary.Tab>($"api/tabs/{tabID}");
+
+        if (tab != null && !string.IsNullOrWhiteSpace(tab.Text))
+        {
+            try
+            {
+                tabLines = JsonSerializer.Deserialize<List<TabLine>>(tab.Text) ?? new();
+            }
+            catch
+            {
+                tabLines = new();
+            }
+        }
+    }
+
+
+
+
+}

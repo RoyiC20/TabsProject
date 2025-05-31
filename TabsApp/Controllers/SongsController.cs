@@ -50,11 +50,11 @@ namespace TabsApp.Controllers
                         },
                         Tab = new Tab
                         {
-                            Difficulty = reader.GetString(4),
-                            Instrument = reader.GetString(5)
+                            Difficulty = reader.IsDBNull(4) ? "" : reader.GetString(4),
+                            Instrument = reader.IsDBNull(5) ? "" : reader.GetString(5)
                         }
+                    };
 
-                    }; 
                     songs.Add(song);
                 }
 
@@ -62,6 +62,27 @@ namespace TabsApp.Controllers
             }
 
             return Ok(songs);
+        }
+
+
+        // TabsController.cs
+        [HttpGet("exists")]
+        public IActionResult SongExists(string title, string artist)
+        {
+            using var connection = _databaseService.GetConnection();
+            connection.Open();
+
+            string query = @"
+        SELECT COUNT(*) FROM songs s
+        JOIN artists a ON s.ArtistID = a.ArtistID
+        WHERE LOWER(s.Name) = LOWER(@title) AND LOWER(a.Name) = LOWER(@artist)";
+
+            using var cmd = new MySqlCommand(query, connection);
+            cmd.Parameters.AddWithValue("@title", title);
+            cmd.Parameters.AddWithValue("@artist", artist);
+
+            int count = Convert.ToInt32(cmd.ExecuteScalar());
+            return Ok(count > 0);
         }
 
 
