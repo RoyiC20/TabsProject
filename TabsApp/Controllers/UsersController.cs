@@ -196,16 +196,22 @@ namespace TabsApp.Controllers
             using var connection = _databaseService.GetConnection();
             connection.Open();
 
+            // צור משתמש פיקטיבי רק בשביל ה-Hasher (הוא דורש אובייקט)
+            var dummyUser = new User { UserID = id };
+            var hasher = new PasswordHasher<User>();
+            string hashedPassword = hasher.HashPassword(dummyUser, model.Password);
+
             var cmd = new MySqlCommand("UPDATE users SET Password = @Password WHERE UserID = @UserID", connection);
-            cmd.Parameters.AddWithValue("@Password", model.Password);
+            cmd.Parameters.AddWithValue("@Password", hashedPassword); 
             cmd.Parameters.AddWithValue("@UserID", id);
 
             int rows = cmd.ExecuteNonQuery();
             if (rows > 0)
-                return Ok();
+                return Ok(new { Message = "Password updated successfully" });
             else
-                return NotFound();
+                return NotFound(new { Message = "User not found" });
         }
+
 
         public class PasswordUpdateModel
         {

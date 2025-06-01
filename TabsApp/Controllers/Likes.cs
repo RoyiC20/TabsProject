@@ -4,6 +4,8 @@ using TabsApp.Services;
 using TabsClassLibrary;
 using System.Collections.Generic;
 
+
+
 namespace TabsApp.Controllers
 {
     [Route("api/[controller]")]
@@ -17,33 +19,53 @@ namespace TabsApp.Controllers
             _databaseService = databaseService;
         }
 
-        // GET: api/Likes
-        [HttpGet]
-        public IActionResult GetLikes()
+        // GET: api/Likes/isliked?songID=1&userID=2
+        [HttpGet("isliked")]
+        public IActionResult IsLiked(int songID, int userID)
         {
-            var likes = new List<Like>();
+            using var connection = _databaseService.GetConnection();
+            connection.Open();
 
-            using (MySqlConnection connection = _databaseService.GetConnection())
-            {
-                connection.Open();
-                string query = "SELECT SongID, Count FROM likes";
-                MySqlCommand command = new MySqlCommand(query, connection);
-                MySqlDataReader reader = command.ExecuteReader();
+            string query = "SELECT COUNT(*) FROM likes WHERE SongID = @songID AND UserID = @userID";
+            using var command = new MySqlCommand(query, connection);
+            command.Parameters.AddWithValue("@songID", songID);
+            command.Parameters.AddWithValue("@userID", userID);
 
-                while (reader.Read())
-                {
-                    var like = new Like
-                    {
-                        SongID = reader.GetInt32(0),
-                        Count = reader.GetInt32(1)
-                    };
-                    likes.Add(like);
-                }
+            int count = Convert.ToInt32(command.ExecuteScalar());
+            return Ok(count > 0);
+        }
 
-                reader.Close();
-            }
+        // POST: api/Likes
+        [HttpPost]
+        public IActionResult AddLike([FromBody] Like like)
+        {
+            using var connection = _databaseService.GetConnection();
+            connection.Open();
 
-            return Ok(likes);
+            string query = "INSERT IGNORE INTO likes (SongID, UserID) VALUES (@songID, @userID)";
+            using var command = new MySqlCommand(query, connection);
+            command.Parameters.AddWithValue("@songID", like.SongID);
+            command.Parameters.AddWithValue("@userID", like.UserID);
+
+            command.ExecuteNonQuery();
+            return Ok();
+        }
+
+        // DELETE: api/Likes?songID=1&userID=2
+        [HttpDelete]
+        public IActionResult RemoveLike(int songID, int userID)
+        {
+            using var connection = _databaseService.GetConnection();
+            connection.Open();
+
+            string query = "DELETE FROM likes WHERE SongID = @songID AND UserID = @userID";
+            using var command = new MySqlCommand(query, connection);
+            command.Parameters.AddWithValue("@songID", songID);
+            command.Parameters.AddWithValue("@userID", userID);
+
+            command.ExecuteNonQuery();
+            return Ok();
         }
     }
 }
+

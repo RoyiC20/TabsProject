@@ -1,85 +1,97 @@
-﻿@page "/currenttab/{tabID:int}"
-@using TabsClassLibrary
-@inject HttpClient Http
-@using System.Text.Json
+﻿    @page "/currenttab/{tabID:int}"
+    @using TabsClassLibrary
+    @inject HttpClient Http
+    @using System.Text.Json
+    @using BlazorAppForTabs.Services
+    @inject UserService UserService
+    @rendermode InteractiveServer
 
 
 
 
 
-@if (tab == null)
-{
-    <div class="text-center mt-5">
-        <div class="spinner-border text-primary" role="status">
-            <span class="visually-hidden">טוען...</span>
-        </div>
-        <p class="mt-3">טוען את הטאב...</p>
-    </div>
-}
-else
-{
-    <div class="container mt-5">
-        <div class="card shadow border-0">
-            <div class="card-header bg-primary text-white text-center">
-                <h4>@(tab.Song?.Name ?? "שיר ללא שם") - @(tab.Song?.Artist?.Name ?? "אמן לא ידוע")</h4>
+
+    @if (tab == null)
+    {
+        <div class="text-center mt-5">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">טוען...</span>
             </div>
-            <div class="card-body">
-                <p><strong>כלי נגינה:</strong> @tab.Instrument</p>
-                <p><strong>רמת קושי:</strong> @tab.Difficulty</p>
-
-                
-
-                <h5 class="text-center mb-4">תצוגת טאבים</h5>
-
-                <div style="overflow-x: auto;">
-                    @foreach (var stringName in GetStringsForInstrument(tab?.Instrument ?? ""))
-                    {
-                        <div class="d-flex align-items-center justify-content-center mb-2">
-                            <span style="width: 30px;">@stringName</span>
-
-                            @foreach (var line in tabLines)
-                            {
-                                var value = stringName switch
-                                {
-                                    "E" => line.E,
-                                    "A" => line.A,
-                                    "D" => line.D,
-                                    "G" => line.G,
-                                    "B" => line.B,
-                                    "e" => line.E2,
-                                    _ => null
-                                };
-
-
-                                <div style="width: 32px; height: 2px; background-color: lightgray; position: relative; margin: 0 3px;">
-                                    @if (value.HasValue)
-                                    {
-                                        <span style="position: absolute; top: -8px; left: 0; width: 100%; text-align: center; font-size: 0.8rem;">
-                                            @value
-                                        </span>
-                                    }
-                                </div>
-                            }
-                        </div>
-                    }
-
+            <p class="mt-3">טוען את הטאב...</p>
+        </div>
+    }
+    else
+    {
+        <div class="container mt-5">
+            <div class="card shadow border-0">
+                <div class="card-header bg-primary text-white text-center">
+                    <h4>@(tab.Song?.Name ?? "שיר ללא שם") - @(tab.Song?.Artist?.Name ?? "אמן לא ידוע")</h4>
+                </div>
+                <div class="card-body">
+                    <p><strong>כלי נגינה:</strong> @tab.Instrument</p>
+                    <p><strong>רמת קושי:</strong> @tab.Difficulty</p>
+                <div class="d-flex justify-content-center gap-3 mb-4">
+                    <button class="btn @(isLiked ? "btn-danger" : "btn-outline-danger")" @onclick="ToggleLike">
+                        @(isLiked ? "💔 הסר לייק" : "❤️ לייק")
+                    </button>
                 </div>
 
 
+                
+
+                    <h5 class="text-center mb-4">תצוגת טאבים</h5>
+
+                    <div style="overflow-x: auto;">
+                        @foreach (var stringName in GetStringsForInstrument(tab?.Instrument ?? ""))
+                        {
+                            <div class="d-flex align-items-center justify-content-center mb-2">
+                                <span style="width: 30px;">@stringName</span>
+
+                                @foreach (var line in tabLines)
+                                {
+                                    var value = stringName switch
+                                    {
+                                        "E" => line.E,
+                                        "A" => line.A,
+                                        "D" => line.D,
+                                        "G" => line.G,
+                                        "B" => line.B,
+                                        "e" => line.E2,
+                                        _ => null
+                                    };
+
+
+                                    <div style="width: 32px; height: 2px; background-color: lightgray; position: relative; margin: 0 3px;">
+                                        @if (value.HasValue)
+                                        {
+                                            <span style="position: absolute; top: -8px; left: 0; width: 100%; text-align: center; font-size: 0.8rem;">
+                                                @value
+                                            </span>
+                                        }
+                                    </div>
+                                }
+                            </div>
+                        }
+
+                    </div>
+
+
+                </div>
             </div>
         </div>
-    </div>
-}
+    }
 
 
 
 @code {
     [Parameter]
     public int tabID { get; set; }
-
+    private string errorMessage = string.Empty;
     private TabsClassLibrary.Tab? tab;
 
     private List<TabLine> tabLines = new();
+
+    private bool isLiked = false;
 
     private string[] GetStringsForInstrument(string instrument)
     {
@@ -106,10 +118,39 @@ else
             {
                 tabLines = new();
             }
+
+            // בדיקה אם המשתמש כבר אהב את השיר
+            var userID = UserService.UserId;
+            if (userID > 0)
+            {
+                isLiked = await Http.GetFromJsonAsync<bool>($"api/likes/isliked?songID={tab.SongID}&userID={userID}");
+            }
         }
     }
 
 
 
 
+
+    private async Task ToggleLike()
+    {
+        var userID = UserService.UserId;
+
+        if (tab?.SongID == null || userID == 0)
+            return;
+
+        if (isLiked)
+        {
+            // הסרת לייק
+            await Http.DeleteAsync($"api/likes?songID={tab.SongID}&userID={userID}");
+            isLiked = false;
+        }
+        else
+        {
+            // הוספת לייק
+            var like = new { songID = tab.SongID, userID = userID };
+            await Http.PostAsJsonAsync("api/likes", like);
+            isLiked = true;
+        }
+    }
 }
