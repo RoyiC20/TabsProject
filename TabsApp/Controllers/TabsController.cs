@@ -56,6 +56,7 @@ namespace TabsApp.Controllers
         [HttpPost]
         public IActionResult SubmitTab([FromBody] TabSubmission submission)
         {
+            
             int artistID;
             int songID;
 
@@ -86,10 +87,11 @@ namespace TabsApp.Controllers
 
             // 3. הוספת שיר חדש
             using (var insertSongCmd = new MySqlCommand(
-                "INSERT INTO songs (Name, ArtistID) VALUES (@name, @artistID); SELECT LAST_INSERT_ID();",
+                "INSERT INTO songs (Name, ArtistID, UserID) VALUES (@name, @artistID, @userID); SELECT LAST_INSERT_ID();",
                 connection
             ))
             {
+                insertSongCmd.Parameters.AddWithValue("@userID", submission.UserID);
                 insertSongCmd.Parameters.AddWithValue("@name", submission.Title);
                 insertSongCmd.Parameters.AddWithValue("@artistID", artistID);
                 songID = Convert.ToInt32(insertSongCmd.ExecuteScalar());

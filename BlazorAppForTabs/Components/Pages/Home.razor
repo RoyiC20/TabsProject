@@ -5,6 +5,7 @@
 @inject NavigationManager Navigation
 @inject UserService UserService
 @rendermode InteractiveServer
+@inject IJSRuntime JS
 
 
 
@@ -50,7 +51,8 @@
                     int index = 1;
                     @foreach (var song in filteredSongs)
                     {
-                        <a href="/currenttab/@song.Tab?.TabID" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                        <a href="#" @onclick="() => RequireLoginOrNavigateToTab(song.Tab?.TabID)"
+                           class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
                             <div class="d-flex align-items-center">
                                 <span class="me-3">@index.</span>
                                 <div>
@@ -153,7 +155,21 @@
 
 
 
-    
+    private async void RequireLoginOrNavigateToTab(int? tabId)
+    {
+        if (string.IsNullOrEmpty(UserService.UserName))
+        {
+            await JS.InvokeVoidAsync("alert", "עליך להתחבר כדי לצפות בטאבים.");
+            Navigation.NavigateTo("/signin", forceLoad: true);
+            return;
+        }
+
+        if (tabId.HasValue)
+        {
+            Navigation.NavigateTo($"/currenttab/{tabId.Value}");
+        }
+    }
+
     
     
 

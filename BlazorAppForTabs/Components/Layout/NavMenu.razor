@@ -3,6 +3,9 @@
 @inject NavigationManager Navigation
 @inject UserService UserService
 @rendermode InteractiveServer
+@inject IJSRuntime JS
+
+
 
 <nav class="navbar navbar-expand-lg navbar-light bg-light sticky-top">
     <div class="container-fluid">
@@ -18,26 +21,30 @@
                 <li class="nav-item">
                     <a class="nav-link" href="/">חיפוש</a>
                 </li>
+
                 <li class="nav-item">
-                    <a class="nav-link" href="/mytabs">הטאבים שלי</a>
+                    <a class="nav-link" href="#" @onclick="() => RequireLoginOrNavigate(MyTabsLink)">הטאבים שלי</a>
                 </li>
+
                 <li class="nav-item">
-                    <a class="nav-link" href="/createtab">יצירת טאב</a>
+                    <a class="nav-link" href="#" @onclick="() => RequireLoginOrNavigate(CreateTabLink)">יצירת טאב</a>
                 </li>
 
                 @if (UserService.IsTeacher())
                 {
                     <li class="nav-item">
-                        <a class="nav-link" href="/teacher">דף מורה</a>
+                        <a class="nav-link" href="#" @onclick="() => RequireLoginOrNavigate(TeacherLink)">דף מורה</a>
                     </li>
                 }
 
                 @if (UserService.IsAdmin())
                 {
                     <li class="nav-item">
-                        <a class="nav-link" href="/admin">דף אדמין</a>
+                        <a class="nav-link" href="#" @onclick="() => RequireLoginOrNavigate(AdminLink)">דף אדמין</a>
                     </li>
                 }
+
+
 
 
             </ul>
@@ -66,9 +73,32 @@
 </nav>
 
 @code {
+    private string MyTabsLink = "/mytabs";
+    private string CreateTabLink = "/createtab";
+    private string TeacherLink = "/teacher";
+    private string AdminLink = "/admin";
+
+
     private void Logout()
     {
         UserService.ClearUser();
         Navigation.NavigateTo("/", forceLoad: true);
     }
+
+    private async void RequireLoginOrNavigate(string target)
+    {
+        if (string.IsNullOrEmpty(UserService.UserName))
+        {
+            await JS.InvokeVoidAsync("alert", "עליך להתחבר כדי לגשת לעמוד זה.");
+            Navigation.NavigateTo("/signin", forceLoad: true);
+        }
+        else
+        {
+            Navigation.NavigateTo(target);
+        }
+    }
+
+
+
 }
+

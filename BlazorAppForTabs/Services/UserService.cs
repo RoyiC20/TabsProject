@@ -9,6 +9,17 @@
         public string Role { get; set; }
 
         // פונקציה לאיפוס הנתונים במקרה של יציאה מהמערכת
+
+        public event Action? OnUserChanged;
+
+        public void SetUser(int userId, string userName, string role)
+        {
+            UserId = userId;
+            UserName = userName;
+            Role = role;
+            OnUserChanged?.Invoke(); 
+        }
+
         public void ClearUser()
         {
             UserId = 0;

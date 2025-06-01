@@ -126,7 +126,7 @@ namespace TabsApp.Controllers
                     string query = "INSERT INTO users (Name, Role, Email, Password) VALUES (@Name, @Role, @Email, @Password)";
                     MySqlCommand command = new MySqlCommand(query, connection);
                     command.Parameters.AddWithValue("@Name", newUser.Name);
-                    command.Parameters.AddWithValue("@Role", "student");
+                    command.Parameters.AddWithValue("@Role", "Student");
                     command.Parameters.AddWithValue("@Email", newUser.Email);
                     command.Parameters.AddWithValue("@Password", newUser.Password); // Hash this in production
 
@@ -172,6 +172,22 @@ namespace TabsApp.Controllers
         {
             public string Password { get; set; }
         }
+
+
+
+        [HttpGet("exists")]
+        public IActionResult CheckEmailExists([FromQuery] string email)
+        {
+            using var connection = _databaseService.GetConnection();
+            connection.Open();
+
+            var cmd = new MySqlCommand("SELECT COUNT(*) FROM users WHERE Email = @Email", connection);
+            cmd.Parameters.AddWithValue("@Email", email);
+
+            long count = (long)cmd.ExecuteScalar();
+            return Ok(count > 0);
+        }
+
 
 
 

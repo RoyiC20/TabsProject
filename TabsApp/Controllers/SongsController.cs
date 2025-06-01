@@ -106,6 +106,58 @@ namespace TabsApp.Controllers
             }
         }
 
+        [HttpGet("user/{userID}")]
+        public IActionResult GetSongsByUser(int userID)
+        {
+            var songs = new List<Song>();
+
+            using (MySqlConnection connection = _databaseService.GetConnection())
+            {
+                connection.Open();
+                string query = @"
+            SELECT s.SongID, s.Name, s.ArtistID, a.Name AS ArtistName, s.UserID,
+                   t.Difficulty, t.Instrument, t.TabID
+            FROM songs s
+            LEFT JOIN artists a ON s.ArtistID = a.ArtistID
+            LEFT JOIN tabs t ON s.SongID = t.SongID
+            WHERE s.UserID = @userID";
+
+                MySqlCommand command = new MySqlCommand(query, connection);
+                command.Parameters.AddWithValue("@userID", userID);
+
+                MySqlDataReader reader = command.ExecuteReader();
+
+                while (reader.Read())
+                {
+                    var song = new Song
+                    {
+                        SongID = reader.GetInt32(0),
+                        Name = reader.GetString(1),
+                        ArtistID = reader.GetInt32(2),
+                        UserID = reader.GetInt32(4),
+                        Artist = new Artist
+                        {
+                            ArtistID = reader.GetInt32(2),
+                            Name = reader.IsDBNull(3) ? null : reader.GetString(3)
+                        },
+                        Tab = new Tab
+                        {
+                            Difficulty = reader.IsDBNull(5) ? "" : reader.GetString(5),
+                            Instrument = reader.IsDBNull(6) ? "" : reader.GetString(6),
+                            TabID = reader.GetInt32(7)
+                        }
+                    };
+
+                    songs.Add(song);
+                }
+
+                reader.Close();
+            }
+
+            return Ok(songs);
+        }
+
+
 
 
     }

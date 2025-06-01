@@ -14,5 +14,6 @@ namespace TabsClassLibrary
         public string Instrument { get; set; } = string.Empty; // Instrument (Guitar, Bass)
         public string Difficulty { get; set; } = string.Empty;
         public List<TabLine> TabLines { get; set; } = new();
+        public int UserID { get; set; }
     }
 }

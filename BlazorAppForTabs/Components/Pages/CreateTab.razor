@@ -327,7 +327,8 @@
             Artist = artist!,
             Difficulty = difficulty!,
             Instrument = instrument!,
-            TabLines = tabLines
+            TabLines = tabLines,
+            UserID = UserService.UserId
         };
 
         var response = await Http.PostAsJsonAsync("api/tabs", submission);

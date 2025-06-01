@@ -1,21 +1,13 @@
-﻿@page "/signup"
+﻿<!-- Sign Up Page -->
+@page "/signup"
 @inject NavigationManager Navigation
 @inject HttpClient Http
-@rendermode InteractiveServer
 @using TabsClassLibrary
 @using BlazorAppForTabs.Services
 @inject UserService UserService
+@rendermode InteractiveServer
 
-
-
-
-
-
-
-<!-- Separator Line -->
 <hr class="my-1" />
-
-
 
 <div class="container mt-5">
     <div class="card shadow-sm" style="max-width: 500px; margin: auto;">
@@ -27,20 +19,28 @@
                 <!-- Name Input -->
                 <div class="mb-3">
                     <label for="name" class="form-label">שם משתמש</label>
-                    <input type="text" id="name" @bind = "name" class="form-control" placeholder="הכנס שם משתמש" />
+                    <input type="text" id="name" @bind="name" class="form-control" placeholder="הכנס שם משתמש" />
                 </div>
 
                 <!-- Email Input -->
                 <div class="mb-3">
                     <label for="email" class="form-label">דוא"ל</label>
-                    <input type="email" id="email" @bind = "email" class="form-control" placeholder="הכנס את הדואל" />
+                    <input type="email" id="email" @bind="email" class="form-control" placeholder="הכנס את הדואל" />
                 </div>
 
                 <!-- Password Input -->
                 <div class="mb-3">
                     <label for="password" class="form-label">סיסמה</label>
-                    <input type="password" @bind = "password" id="password" class="form-control" placeholder="הכנס סיסמה" />
+                    <input type="password" id="password" @bind="password" class="form-control" placeholder="הכנס סיסמה" />
                 </div>
+
+                <!-- Error Message -->
+                @if (!string.IsNullOrEmpty(errorMessage))
+                {
+                    <div class="alert alert-danger text-center" role="alert">
+                        @errorMessage
+                    </div>
+                }
 
                 <!-- Submit Button -->
                 <div class="d-grid">
@@ -51,41 +51,78 @@
     </div>
 </div>
 
-
-@code
-{
+@code {
     private string name = string.Empty;
     private string email = string.Empty;
     private string password = string.Empty;
     private string role = "Student"; // Default role
     private string errorMessage = string.Empty;
 
+
+    bool IsValidEmail(string email)
+    {
+        try
+        {
+            var addr = new System.Net.Mail.MailAddress(email);
+            return addr.Address == email;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+
+
     private async Task HandleRegister()
     {
-        Console.WriteLine($"Register attempt with Name: {name}, Email: {email}, Role: {role}");
+        errorMessage = string.Empty;
+
+        if (!IsValidEmail(email))
+        {
+            errorMessage = "כתובת האימייל לא תקינה";
+            return;
+        }
+        var exists = await Http.GetFromJsonAsync<bool>($"api/Users/exists?email={email}");
+        if (exists)
+        {
+            errorMessage = "אימייל זה כבר קיים במערכת";
+            return;
+        }
 
         try
         {
-            var response = await Http.PostAsJsonAsync("api/Users/add", new { Name = name, Role = role, Email = email, Password = password });
+            var response = await Http.PostAsJsonAsync("api/Users/add", new
+            {
+                Name = name,
+                Role = UserRole.Student,
+                Email = email,
+                Password = password
+            });
 
-            Console.WriteLine($"Response status code: {response.StatusCode}"); // Debugging
 
             if (response.IsSuccessStatusCode)
             {
-                var result = await response.Content.ReadFromJsonAsync<dynamic>();
-                Console.WriteLine($"Registration successful: {result}");
-                Navigation.NavigateTo("/"); // Redirect to login page after registration
+                var user = await response.Content.ReadFromJsonAsync<LoginResponse>();
+
+                UserService.UserId = user.UserID;
+                UserService.UserName = user.Name;
+                UserService.Role = user.Role;
+
+                Navigation.NavigateTo("/", forceLoad: true);
             }
             else
             {
-                errorMessage = "הרשמה נכשלה, נסה שוב";
-                Console.WriteLine($"Registration failed: {response.StatusCode}"); // Debugging
+                var errorContent = await response.Content.ReadAsStringAsync();
+                errorMessage = $"הרשמה נכשלה: {errorContent}";
+                Console.WriteLine($"Registration failed: {errorContent}");
             }
         }
         catch (Exception ex)
         {
-            errorMessage = "שגיאה בעת ההרשמה";
-            Console.WriteLine($"Error during registration: {ex.Message}"); // Debugging
+            errorMessage = "שגיאה בעת ההרשמה. בדוק את החיבור ונסה שוב.";
+            Console.WriteLine($"Error during registration: {ex.Message}");
         }
     }
+
 }
