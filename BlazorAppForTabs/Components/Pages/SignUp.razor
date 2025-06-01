@@ -72,11 +72,28 @@
         }
     }
 
+    bool IsValidPassword(string password)
+    {
+        if (password.Length < 8)
+            return false;
+
+        bool hasUpperCase = password.Any(char.IsUpper);
+        bool hasSpecialChar = password.Any(c => !char.IsLetterOrDigit(c));
+
+        return hasUpperCase && hasSpecialChar;
+    }
+
 
 
     private async Task HandleRegister()
     {
         errorMessage = string.Empty;
+
+        if (!IsValidPassword(password))
+        {
+            errorMessage = "הסיסמה חייבת להיות לפחות 8 תווים, להכיל אות גדולה אחת ולפחות תו מיוחד";
+            return;
+        }
 
         if (!IsValidEmail(email))
         {
@@ -89,6 +106,8 @@
             errorMessage = "אימייל זה כבר קיים במערכת";
             return;
         }
+
+
 
         try
         {
@@ -109,7 +128,7 @@
                 UserService.UserName = user.Name;
                 UserService.Role = user.Role;
 
-                Navigation.NavigateTo("/", forceLoad: true);
+                Navigation.NavigateTo("/signin", forceLoad: true);
             }
             else
             {

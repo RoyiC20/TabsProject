@@ -22,42 +22,70 @@ namespace TabsApp.Controllers
         [HttpPost("login")]
         public IActionResult Login([FromBody] LoginRequest loginRequest)
         {
-            Console.WriteLine("Login endpoint called."); // Debug: Endpoint entry
-            Console.WriteLine($"Email: {loginRequest.Email}, Password: {loginRequest.Password}"); // Debug: Input data
+            Console.WriteLine("Login endpoint called.");
+            Console.WriteLine($"Email: {loginRequest.Email}, Password: {loginRequest.Password}");
 
             using (MySqlConnection connection = _databaseService.GetConnection())
             {
                 try
                 {
                     connection.Open();
-                    Console.WriteLine("Database connection opened."); // Debug: DB connection success
+                    Console.WriteLine("Database connection opened.");
 
-                    string query = "SELECT * FROM users WHERE Email = @Email AND Password = @Password";
+                    string query = "SELECT * FROM users WHERE Email = @Email";
                     MySqlCommand command = new MySqlCommand(query, connection);
                     command.Parameters.AddWithValue("@Email", loginRequest.Email);
-                    command.Parameters.AddWithValue("@Password", loginRequest.Password); // Ideally hashed passwords
 
                     using (var reader = command.ExecuteReader())
                     {
                         if (reader.Read())
                         {
-                            Console.WriteLine("User found in database."); // Debug: User found
-                            return Ok(new { Message = "Login successful", UserId = reader["UserID"], Name = reader["Name"], Role = reader["Role"] });
+                            // שליפת הנתונים
+                            int userId = reader.GetInt32("UserID");
+                            string name = reader.GetString("Name");
+                            string role = reader.GetString("Role");
+                            string email = reader.GetString("Email");
+                            string hashedPassword = reader.GetString("Password");
+
+                            // יצירת אובייקט משתמש זמני לבדיקה
+                            var user = new User { Email = email };
+
+                            // בדיקת סיסמה
+                            var hasher = new PasswordHasher<User>();
+                            var result = hasher.VerifyHashedPassword(user, hashedPassword, loginRequest.Password);
+
+                            if (result == PasswordVerificationResult.Success)
+                            {
+                                Console.WriteLine("Password matched. Login successful.");
+                                return Ok(new LoginResponse
+                                {
+                                    UserID = userId,
+                                    Name = name,
+                                    Role = role,
+                                    Email = email
+                                });
+                            }
+                            else
+                            {
+                                Console.WriteLine("Password mismatch.");
+                                return Unauthorized(new { Message = "Invalid credentials" });
+                            }
                         }
                         else
                         {
-                            Console.WriteLine("Invalid credentials."); // Debug: Invalid login attempt
+                            Console.WriteLine("User not found.");
                             return Unauthorized(new { Message = "Invalid credentials" });
                         }
                     }
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"Error during login: {ex.Message}"); // Debug: Exception details
+                    Console.WriteLine($"Error during login: {ex.Message}");
                     return StatusCode(500, new { Message = "Internal server error" });
                 }
             }
         }
+
 
         public class LoginRequest
         {
@@ -111,31 +139,40 @@ namespace TabsApp.Controllers
 
 
         [HttpPost("add")]
-        public IActionResult AddUser(User newUser)
+        public IActionResult AddUser([FromBody] User newUser)
         {
-            Console.WriteLine("AddUser endpoint called."); // Debug: Endpoint entry
+            Console.WriteLine("AddUser endpoint called.");
 
             using (MySqlConnection connection = _databaseService.GetConnection())
             {
                 try
                 {
                     connection.Open();
-                    Console.WriteLine("Database connection opened."); // Debug: DB connection success
 
-                    // Insert new user into the database
+                    var hasher = new PasswordHasher<User>();
+                    string hashedPassword = hasher.HashPassword(newUser, newUser.Password);
+
+                    // השאילתה הנכונה
                     string query = "INSERT INTO users (Name, Role, Email, Password) VALUES (@Name, @Role, @Email, @Password)";
                     MySqlCommand command = new MySqlCommand(query, connection);
                     command.Parameters.AddWithValue("@Name", newUser.Name);
-                    command.Parameters.AddWithValue("@Role", "Student");
+                    command.Parameters.AddWithValue("@Role", newUser.Role.ToString());
                     command.Parameters.AddWithValue("@Email", newUser.Email);
-                    command.Parameters.AddWithValue("@Password", newUser.Password); // Hash this in production
+                    command.Parameters.AddWithValue("@Password", hashedPassword); // ✅ משתמש ב־hash הנכון
 
                     int rowsAffected = command.ExecuteNonQuery();
-                    Console.WriteLine($"Rows affected: {rowsAffected}"); // Debug: Rows inserted
 
                     if (rowsAffected > 0)
                     {
-                        return Ok(new { Message = "User added successfully", User = newUser});
+                        int userId = (int)command.LastInsertedId;
+
+                        return Ok(new LoginResponse
+                        {
+                            UserID = userId,
+                            Name = newUser.Name,
+                            Role = newUser.Role.ToString(),
+                            Email = newUser.Email
+                        });
                     }
                     else
                     {
@@ -144,11 +181,13 @@ namespace TabsApp.Controllers
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"Error adding user: {ex.Message}"); // Debug: Exception
+                    Console.WriteLine($"Error adding user: {ex.Message}");
                     return StatusCode(500, new { Message = "Internal server error" });
                 }
             }
         }
+
+
 
 
         [HttpPut("{id}/password")]
