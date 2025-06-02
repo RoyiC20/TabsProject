@@ -19,7 +19,7 @@ namespace TabsApp.Controllers
             _databaseService = databaseService;
         }
 
-        // GET: api/Likes/isliked?songID=1&userID=2
+
         [HttpGet("isliked")]
         public IActionResult IsLiked(int songID, int userID)
         {
@@ -35,7 +35,6 @@ namespace TabsApp.Controllers
             return Ok(count > 0);
         }
 
-        // POST: api/Likes
         [HttpPost]
         public IActionResult AddLike([FromBody] Like like)
         {
@@ -51,7 +50,22 @@ namespace TabsApp.Controllers
             return Ok();
         }
 
-        // DELETE: api/Likes?songID=1&userID=2
+        [HttpGet("count")]
+        public IActionResult GetLikeCount(int songID)
+        {
+            using var connection = _databaseService.GetConnection();
+            connection.Open();
+
+            string query = "SELECT COUNT(*) FROM likes WHERE SongID = @songID";
+            using var command = new MySqlCommand(query, connection);
+            command.Parameters.AddWithValue("@songID", songID);
+
+            int count = Convert.ToInt32(command.ExecuteScalar());
+            return Ok(count);
+        }
+
+
+
         [HttpDelete]
         public IActionResult RemoveLike(int songID, int userID)
         {

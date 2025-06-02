@@ -5,6 +5,7 @@
 @rendermode InteractiveServer
 @using TabsClassLibrary
 @inject HttpClient Http
+@inject IJSRuntime JS
 
 
 
@@ -83,8 +84,12 @@
                                                 <strong>@song.Name</strong> <br />
                                                 <small>@song.Artist?.Name</small>
                                             </div>
-                                            <a href="/currenttab/@song.Tab?.TabID" class="btn btn-outline-primary btn-sm">צפייה</a>
+                                            <div class="d-flex gap-2">
+                                                <a href="/currenttab/@song.Tab?.TabID" class="btn btn-outline-primary btn-sm">צפייה</a>
+                                                <button class="btn btn-outline-danger btn-sm" @onclick="() => ConfirmDelete(song)">מחיקה</button>
+                                            </div>
                                         </li>
+
                                     }
                                 }
                                 else
@@ -123,4 +128,25 @@
             Console.WriteLine($"Error loading submitted tabs: {ex.Message}");
         }
     }
+
+
+    private async Task ConfirmDelete(Song song)
+    {
+        bool confirmed = await JS.InvokeAsync<bool>("confirm", $"האם אתה בטוח שברצונך למחוק את הטאב והשיר '{song.Name}'?");
+        if (!confirmed)
+            return;
+
+        var response = await Http.DeleteAsync($"api/songs/{song.SongID}");
+        if (response.IsSuccessStatusCode)
+        {
+            submittedSongs.Remove(song);
+            StateHasChanged();
+        }
+        else
+        {
+            Console.WriteLine("שגיאה במחיקה.");
+        }
+    }
+
+
 }

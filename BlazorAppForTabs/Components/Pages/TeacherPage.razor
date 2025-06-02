@@ -6,78 +6,141 @@
 @using TabsClassLibrary
 @inject IJSRuntime JS
 
-
-
-
 <h1 class="mb-4">דף מורה</h1>
-<p>Role: @UserService.Role</p>
-<p>UserName: @UserService.UserName</p>
 
-@if (UserService.IsTeacher() == false)
+@if (!UserService.IsTeacher())
 {
     <p>אין לך הרשאה לצפות בדף זה</p>
 }
 else
 {
-    <div class="card">
-        <div class="card-header">
-            <h3>רשימת טאבים</h3>
-        </div>
-        <div class="card-body">
-            <table class="table table-striped">
-                
-                    @if (songs == null && !loadError)
-                    {
-                        <p><em>טוען רשימת שירים...</em></p>
-                    }
-                    else if (loadError)
-                    {
-                        <p><em>אירעה שגיאה בטעינת השירים. בדוק את המסוף לקבלת פרטים.</em></p>
-                    }
-                    else if (songs != null && !songs.Any())
-                    {
-                        <p><em>לא נמצאו שירים.</em></p>
-                    }
-                    else if (songs != null)
-                    {
-                        <table class="table table-striped">
-                            <thead>
-                                <tr>
-                                    <th>#</th>
-                                    <th>שם השיר</th>
-                                    <th>אמן</th>
-                                    <th>רמת קושי (מהטאב)</th>
-                                    <th>כלי נגינה (מהטאב)</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach (var (song, index) in songs.Select((item, idx) => (item, idx + 1)))
-                                {
-                                    <tr>
-                                        <td>@index</td>
-                                        <td>@song.Name</td>
-                                        <td>@(song.Artist?.Name ?? "N/A")</td>
-                                        <td>@(song.Tab?.Difficulty ?? "N/A")</td>
-                                        <td>@(song.Tab?.Instrument ?? "N/A")</td>
-                                        <td>
-                                            <button class="btn btn-sm btn-primary me-2">ערוך</button>
-                                            <button class="btn btn-sm btn-danger" @onclick="() => DeleteSong(song.SongID)">מחק</button>
-                                        </td
-                                    </tr>
-                                }
-                            </tbody>
-                        </table>
-                    }
-                
-            </table>
-        </div>
+    <div class="btn-group mb-3" role="group">
+        <button class="btn @(currentSection == TeacherSection.Tabs ? "btn-primary" : "btn-outline-primary")"
+                @onclick="() => currentSection = TeacherSection.Tabs">
+            טאבים
+        </button>
+        <button class="btn @(currentSection == TeacherSection.Comments ? "btn-primary" : "btn-outline-primary")"
+                @onclick="() => currentSection = TeacherSection.Comments">
+            תגובות
+        </button>
     </div>
+
+    @if (currentSection == TeacherSection.Tabs)
+    {
+        <div class="card">
+            <div class="card-header">
+                <h3>רשימת טאבים</h3>
+            </div>
+            <div class="card-body">
+                @if (songs == null && !loadError)
+                {
+                    <p><em>טוען רשימת שירים...</em></p>
+                }
+                else if (loadError)
+                {
+                    <p><em>אירעה שגיאה בטעינת השירים.</em></p>
+                }
+                else if (songs != null && !songs.Any())
+                {
+                    <p><em>לא נמצאו שירים.</em></p>
+                }
+                else
+                {
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>שם השיר</th>
+                                <th>אמן</th>
+                                <th>רמת קושי</th>
+                                <th>כלי נגינה</th>
+                                <th>פעולות</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var (song, index) in songs.Select((item, idx) => (item, idx + 1)))
+                            {
+                                <tr>
+                                    <td>@index</td>
+                                    <td>@song.Name</td>
+                                    <td>@(song.Artist?.Name ?? "N/A")</td>
+                                    <td>@(song.Tab?.Difficulty ?? "N/A")</td>
+                                    <td>@(song.Tab?.Instrument ?? "N/A")</td>
+                                    <td>
+                                        <button class="btn btn-sm btn-danger" @onclick="() => DeleteSong(song.SongID)">מחק</button>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+            </div>
+        </div>
+    }
+
+    @if (currentSection == TeacherSection.Comments)
+    {
+        <div class="card">
+            <div class="card-header">
+                <h3>רשימת תגובות</h3>
+            </div>
+            <div class="card-body">
+                @if (comments == null && !loadError)
+                {
+                    <p><em>טוען תגובות...</em></p>
+                }
+                else if (loadError)
+                {
+                    <p><em>אירעה שגיאה בטעינת התגובות.</em></p>
+                }
+                else if (comments != null && !comments.Any())
+                {
+                    <p><em>לא נמצאו תגובות.</em></p>
+                }
+                else
+                {
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>תוכן</th>
+                                <th>מזהה שיר</th>
+                                <th>מזהה משתמש</th>
+                                <th>פעולות</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var (comment, index) in comments.Select((c, i) => (c, i + 1)))
+                            {
+                                <tr>
+                                    <td>@index</td>
+                                    <td>@comment.Content</td>
+                                    <td>@comment.SongID</td>
+                                    <td>@comment.UserID</td>
+                                    <td>
+                                        <button class="btn btn-sm btn-danger" @onclick="() => DeleteComment(comment.CommentID)">מחק</button>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+            </div>
+        </div>
+    }
 }
 
-
 @code {
-    private List<Song>? songs; // Changed from List<Tab> to List<Song>
+    private List<Song>? songs;
+    private List<Comment>? comments;
     private bool loadError = false;
+
+    private enum TeacherSection
+    {
+        Tabs,
+        Comments
+    }
+    private TeacherSection currentSection = TeacherSection.Tabs;
 
     protected override async Task OnInitializedAsync()
     {
@@ -85,42 +148,62 @@ else
         {
             try
             {
-                // Assuming your GetSongs() method is mapped to "api/Songs"
-                // If it's in SongsController.cs with a standard [HttpGet] on GetSongs(), this should be correct.
                 songs = await Http.GetFromJsonAsync<List<Song>>("api/Songs");
+                comments = await Http.GetFromJsonAsync<List<Comment>>("api/Comments");
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error loading songs: {ex.Message}");
+                Console.WriteLine($"Error loading data: {ex.Message}");
                 loadError = true;
-                songs = new List<Song>(); // Initialize to empty list on error
+                songs = new List<Song>();
+                comments = new List<Comment>();
             }
         }
     }
 
-
     private async Task DeleteSong(int songId)
-{
-    var confirmed = await JS.InvokeAsync<bool>("confirm", $"האם אתה בטוח שברצונך למחוק את השיר מספר {songId}?");
-    if (!confirmed)
-        return;
-
-    try
     {
-        var response = await Http.DeleteAsync($"api/Songs/{songId}");
-        if (response.IsSuccessStatusCode)
+        var confirmed = await JS.InvokeAsync<bool>("confirm", $"האם אתה בטוח שברצונך למחוק את השיר מספר {songId}?");
+        if (!confirmed) return;
+
+        try
         {
-            songs = songs!.Where(s => s.SongID != songId).ToList();
+            var response = await Http.DeleteAsync($"api/Songs/{songId}");
+            if (response.IsSuccessStatusCode)
+            {
+                songs = songs!.Where(s => s.SongID != songId).ToList();
+            }
+            else
+            {
+                Console.WriteLine("מחיקת שיר נכשלה. קוד: " + response.StatusCode);
+            }
         }
-        else
+        catch (Exception ex)
         {
-            Console.WriteLine("מחיקה נכשלה. קוד: " + response.StatusCode);
+            Console.WriteLine("שגיאה במחיקת שיר: " + ex.Message);
         }
     }
-    catch (Exception ex)
-    {
-        Console.WriteLine("שגיאה במחיקה: " + ex.Message);
-    }
-}
 
+    private async Task DeleteComment(int commentId)
+    {
+        var confirmed = await JS.InvokeAsync<bool>("confirm", $"האם אתה בטוח שברצונך למחוק את התגובה מספר {commentId}?");
+        if (!confirmed) return;
+
+        try
+        {
+            var response = await Http.DeleteAsync($"api/Comments/{commentId}");
+            if (response.IsSuccessStatusCode)
+            {
+                comments = comments!.Where(c => c.CommentID != commentId).ToList();
+            }
+            else
+            {
+                Console.WriteLine("מחיקת תגובה נכשלה. קוד: " + response.StatusCode);
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("שגיאה במחיקת תגובה: " + ex.Message);
+        }
+    }
 }

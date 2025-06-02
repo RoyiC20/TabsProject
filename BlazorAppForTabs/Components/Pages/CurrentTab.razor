@@ -11,79 +11,134 @@
 
 
 
-    @if (tab == null)
-    {
-        <div class="text-center mt-5">
-            <div class="spinner-border text-primary" role="status">
-                <span class="visually-hidden">טוען...</span>
-            </div>
-            <p class="mt-3">טוען את הטאב...</p>
+@if (tab == null)
+{
+    <div class="text-center mt-5">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">טוען...</span>
         </div>
-    }
-    else
-    {
-        <div class="container mt-5">
-            <div class="card shadow border-0">
-                <div class="card-header bg-primary text-white text-center">
-                    <h4>@(tab.Song?.Name ?? "שיר ללא שם") - @(tab.Song?.Artist?.Name ?? "אמן לא ידוע")</h4>
-                </div>
-                <div class="card-body">
-                    <p><strong>כלי נגינה:</strong> @tab.Instrument</p>
-                    <p><strong>רמת קושי:</strong> @tab.Difficulty</p>
-                <div class="d-flex justify-content-center gap-3 mb-4">
-                    <button class="btn @(isLiked ? "btn-danger" : "btn-outline-danger")" @onclick="ToggleLike">
-                        @(isLiked ? "💔 הסר לייק" : "❤️ לייק")
-                    </button>
-                    <button class="btn @(isFavorited ? "btn-warning" : "btn-outline-warning")" @onclick="ToggleFavorite">
-                        @(isFavorited ? "⭐ הסר ממועדפים" : "⭐ הוסף למועדפים")
-                    </button>
-                </div>
+        <p class="mt-3">טוען את הטאב...</p>
+    </div>
+}
+else
+{
+    <div class="container mt-5">
+        <div class="card shadow border-0">
+            <div class="card-header bg-primary text-white text-center">
+                <h4>@(tab.Song?.Name ?? "שיר ללא שם") - @(tab.Song?.Artist?.Name ?? "אמן לא ידוע")</h4>
+            </div>
+            <div class="card-body">
+                <p><strong>כלי נגינה:</strong> @tab.Instrument</p>
+                <p><strong>רמת קושי:</strong> @tab.Difficulty</p>
+            <div class="d-flex justify-content-center gap-3 mb-4">
+
+                <button class="btn @(isLiked ? "btn-danger" : "btn-outline-danger")" @onclick="ToggleLike">
+                    @(isLiked ? "💔 הסר לייק" : "❤️ לייק") (@likeCount)
+                </button>
+
+                <button class="btn @(isFavorited ? "btn-warning" : "btn-outline-warning")" @onclick="ToggleFavorite">
+                    @(isFavorited ? "⭐ הסר ממועדפים" : "⭐ הוסף למועדפים")
+                </button>
+            </div>
 
 
                 
 
-                    <h5 class="text-center mb-4">תצוגת טאבים</h5>
+                <h5 class="text-center mb-4">תצוגת טאבים</h5>
 
-                    <div style="overflow-x: auto;">
-                        @foreach (var stringName in GetStringsForInstrument(tab?.Instrument ?? ""))
-                        {
-                            <div class="d-flex align-items-center justify-content-center mb-2">
-                                <span style="width: 30px;">@stringName</span>
+                <div style="overflow-x: auto;">
+                    @foreach (var stringName in GetStringsForInstrument(tab?.Instrument ?? ""))
+                    {
+                        <div class="d-flex align-items-center justify-content-center mb-2">
+                            <span style="width: 30px;">@stringName</span>
 
-                                @foreach (var line in tabLines)
+                            @foreach (var line in tabLines)
+                            {
+                                var value = stringName switch
                                 {
-                                    var value = stringName switch
+                                    "E" => line.E,
+                                    "A" => line.A,
+                                    "D" => line.D,
+                                    "G" => line.G,
+                                    "B" => line.B,
+                                    "e" => line.E2,
+                                    _ => null
+                                };
+
+
+                                <div style="width: 32px; height: 2px; background-color: lightgray; position: relative; margin: 0 3px;">
+                                    @if (value.HasValue)
                                     {
-                                        "E" => line.E,
-                                        "A" => line.A,
-                                        "D" => line.D,
-                                        "G" => line.G,
-                                        "B" => line.B,
-                                        "e" => line.E2,
-                                        _ => null
-                                    };
-
-
-                                    <div style="width: 32px; height: 2px; background-color: lightgray; position: relative; margin: 0 3px;">
-                                        @if (value.HasValue)
-                                        {
-                                            <span style="position: absolute; top: -8px; left: 0; width: 100%; text-align: center; font-size: 0.8rem;">
-                                                @value
-                                            </span>
-                                        }
-                                    </div>
-                                }
-                            </div>
-                        }
-
-                    </div>
-
+                                        <span style="position: absolute; top: -8px; left: 0; width: 100%; text-align: center; font-size: 0.8rem;">
+                                            @value
+                                        </span>
+                                    }
+                                </div>
+                            }
+                        </div>
+                    }
 
                 </div>
+
+
+
+
             </div>
         </div>
-    }
+    </div>
 
+    <div class="card mt-5 shadow-sm">
+        <div class="card-body" dir="rtl">
+            <h5 class="mb-4 text-primary fw-bold">💬 תגובות</h5>
+
+            <!-- שדה כתיבת תגובה -->
+            <div class="mb-4">
+                <textarea class="form-control text-end" placeholder="כתוב תגובה..." rows="3" @bind="newCommentContent"></textarea>
+                <div class="text-start mt-2">
+                    <button class="btn btn-primary px-4" @onclick="SubmitComment" disabled="@string.IsNullOrWhiteSpace(newCommentContent)">
+                        שלח תגובה
+                    </button>
+                </div>
+            </div>
+
+            <!--קו הפרדה -->
+            <hr class="mb-4 mt-0" />
+
+            <!-- רשימת תגובות -->
+            @if (comments.Any())
+            {
+                <ul class="list-group list-group-flush">
+                    @foreach (var comment in comments)
+                    {
+                        <li class="list-group-item">
+                            <div class="d-flex align-items-start flex-row-reverse">
+                                <div class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center ms-3"
+                                     style="width: 40px; height: 40px; font-weight: bold;">
+                                    @comment.Username.Substring(0, 1).ToUpper()
+                                </div>
+                                <div class="w-100 text-end">
+                                    <div class="d-flex justify-content-between align-items-center flex-row-reverse">
+                                        <strong>@comment.Username</strong>
+                                        <small class="text-muted">@comment.CreatedAt.ToString("g")</small>
+                                    </div>
+                                    <p class="mb-1 mt-2">@comment.Content</p>
+                                </div>
+                            </div>
+                        </li>
+                    }
+                </ul>
+            }
+            else
+            {
+                <p class="text-muted text-end mt-3">אין עדיין תגובות. היה הראשון להגיב!</p>
+            }
+        </div>
+    </div>
+
+
+
+
+}
 
 
 @code {
@@ -94,8 +149,12 @@
 
     private List<TabLine> tabLines = new();
 
+    private int likeCount = 0;
     private bool isLiked = false;
     private bool isFavorited = false;
+
+    private List<Comment> comments = new();
+    private string newCommentContent = string.Empty;
 
 
     private string[] GetStringsForInstrument(string instrument)
@@ -131,8 +190,48 @@
                 isLiked = await Http.GetFromJsonAsync<bool>($"api/likes/isliked?songID={tab.SongID}&userID={userID}");
                 isFavorited = await Http.GetFromJsonAsync<bool>($"api/favorites/isfavorited?songID={tab.SongID}&userID={userID}");
             }
+            comments = await Http.GetFromJsonAsync<List<Comment>>($"api/comments/by-song?songID={tab.SongID}");
+            likeCount = await Http.GetFromJsonAsync<int>($"api/likes/count?songID={tab.SongID}");
+
         }
     }
+
+
+    private async Task SubmitComment()
+    {
+        var userID = UserService.UserId;
+
+        if (tab?.SongID == null || userID == 0 || string.IsNullOrWhiteSpace(newCommentContent))
+            return;
+
+        // הגבלת מספר משפטים (5) או תווים (300)
+        
+        if (newCommentContent.Length > 300)
+        {
+            errorMessage = "התגובה ארוכה מדי. מותר עד 300 תווים.";
+            return;
+        }
+
+        var newComment = new Comment
+        {
+            SongID = tab.SongID,
+            UserID = userID,
+            Content = newCommentContent,
+            Username = UserService.UserName,
+            CreatedAt = DateTime.Now
+        };
+
+        var response = await Http.PostAsJsonAsync("api/comments", newComment);
+        if (response.IsSuccessStatusCode)
+        {
+            comments.Insert(0, newComment);
+            newCommentContent = string.Empty;
+            errorMessage = ""; // נקה שגיאה
+        }
+    }
+
+
+
 
 
     private async Task ToggleFavorite()
@@ -178,5 +277,8 @@
             await Http.PostAsJsonAsync("api/likes", like);
             isLiked = true;
         }
+
+        likeCount = await Http.GetFromJsonAsync<int>($"api/likes/count?songID={tab.SongID}");
+
     }
 }
