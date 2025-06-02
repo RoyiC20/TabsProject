@@ -34,6 +34,9 @@
                     <button class="btn @(isLiked ? "btn-danger" : "btn-outline-danger")" @onclick="ToggleLike">
                         @(isLiked ? "💔 הסר לייק" : "❤️ לייק")
                     </button>
+                    <button class="btn @(isFavorited ? "btn-warning" : "btn-outline-warning")" @onclick="ToggleFavorite">
+                        @(isFavorited ? "⭐ הסר ממועדפים" : "⭐ הוסף למועדפים")
+                    </button>
                 </div>
 
 
@@ -92,6 +95,8 @@
     private List<TabLine> tabLines = new();
 
     private bool isLiked = false;
+    private bool isFavorited = false;
+
 
     private string[] GetStringsForInstrument(string instrument)
     {
@@ -119,16 +124,37 @@
                 tabLines = new();
             }
 
-            // בדיקה אם המשתמש כבר אהב את השיר
+            // בדיקה אם המשתמש כבר אהב את השיר או שם במועדפים
             var userID = UserService.UserId;
             if (userID > 0)
             {
                 isLiked = await Http.GetFromJsonAsync<bool>($"api/likes/isliked?songID={tab.SongID}&userID={userID}");
+                isFavorited = await Http.GetFromJsonAsync<bool>($"api/favorites/isfavorited?songID={tab.SongID}&userID={userID}");
             }
         }
     }
 
 
+    private async Task ToggleFavorite()
+    {
+        var userID = UserService.UserId;
+
+        if (tab?.SongID == null || userID == 0)
+            return;
+
+        if (isFavorited)
+        {
+            await Http.DeleteAsync($"api/favorites?songID={tab.SongID}&userID={userID}");
+            isFavorited = false;
+        }
+        else
+        {
+            var favorite = new { songID = tab.SongID, userID = userID };
+            await Http.PostAsJsonAsync("api/favorites", favorite);
+            isFavorited = true;
+        }
+
+    }
 
 
 
