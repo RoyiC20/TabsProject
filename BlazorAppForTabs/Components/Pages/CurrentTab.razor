@@ -47,38 +47,39 @@ else
                 <h5 class="text-center mb-4">תצוגת טאבים</h5>
 
                 <div style="overflow-x: auto;">
-                    @foreach (var stringName in GetStringsForInstrument(tab?.Instrument ?? ""))
-                    {
-                        <div class="d-flex align-items-center justify-content-center mb-2">
-                            <span style="width: 30px;">@stringName</span>
+                    <div style="display: inline-block; white-space: nowrap;">
+                        @foreach (var stringName in GetStringsForInstrument(tab?.Instrument ?? ""))
+                        {
+                            <div class="d-flex align-items-center mb-2">
+                                <span style="width: 30px;">@stringName</span>
 
-                            @foreach (var line in tabLines)
-                            {
-                                var value = stringName switch
+                                @foreach (var line in tabLines)
                                 {
-                                    "E" => line.E,
-                                    "A" => line.A,
-                                    "D" => line.D,
-                                    "G" => line.G,
-                                    "B" => line.B,
-                                    "e" => line.E2,
-                                    _ => null
-                                };
-
-
-                                <div style="width: 32px; height: 2px; background-color: lightgray; position: relative; margin: 0 3px;">
-                                    @if (value.HasValue)
+                                    var value = stringName switch
                                     {
-                                        <span style="position: absolute; top: -8px; left: 0; width: 100%; text-align: center; font-size: 0.8rem;">
-                                            @value
-                                        </span>
-                                    }
-                                </div>
-                            }
-                        </div>
-                    }
+                                        "E" => line.E,
+                                        "A" => line.A,
+                                        "D" => line.D,
+                                        "G" => line.G,
+                                        "B" => line.B,
+                                        "e" => line.E2,
+                                        _ => null
+                                    };
 
+                                    <div style="width: 32px; height: 2px; background-color: lightgray; position: relative; margin: 0 3px;">
+                                        @if (value.HasValue)
+                                        {
+                                            <span style="position: absolute; top: -8px; left: 0; width: 100%; text-align: center; font-size: 0.8rem;">
+                                                @value
+                                            </span>
+                                        }
+                                    </div>
+                                }
+                            </div>
+                        }
+                    </div>
                 </div>
+
 
 
 

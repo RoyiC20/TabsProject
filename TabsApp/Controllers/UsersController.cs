@@ -158,7 +158,7 @@ namespace TabsApp.Controllers
                     command.Parameters.AddWithValue("@Name", newUser.Name);
                     command.Parameters.AddWithValue("@Role", newUser.Role.ToString());
                     command.Parameters.AddWithValue("@Email", newUser.Email);
-                    command.Parameters.AddWithValue("@Password", hashedPassword); // ✅ משתמש ב־hash הנכון
+                    command.Parameters.AddWithValue("@Password", hashedPassword); 
 
                     int rowsAffected = command.ExecuteNonQuery();
 
@@ -267,18 +267,44 @@ namespace TabsApp.Controllers
                 using var connection = _databaseService.GetConnection();
                 connection.Open();
 
-                string query = "DELETE FROM users WHERE UserID = @id";
-                using var command = new MySqlCommand(query, connection);
-                command.Parameters.AddWithValue("@id", id);
-
-                int rowsAffected = command.ExecuteNonQuery();
-                if (rowsAffected > 0)
+                // 1. Get all song IDs uploaded by the user
+                var songIds = new List<int>();
+                using (var getSongsCmd = new MySqlCommand("SELECT SongID FROM songs WHERE UserID = @id", connection))
                 {
-                    return Ok(new { Message = "User deleted successfully" });
+                    getSongsCmd.Parameters.AddWithValue("@id", id);
+                    using var reader = getSongsCmd.ExecuteReader();
+                    while (reader.Read())
+                    {
+                        songIds.Add(reader.GetInt32(0));
+                    }
                 }
-                else
+
+                // 2. Delete each song with its related tabs, likes, and favorites
+                foreach (var songId in songIds)
                 {
-                    return NotFound(new { Message = "User not found" });
+                    _databaseService.DeleteSongWithTabs(songId);
+                }
+
+                // 3. Delete user's favorites and likes (just in case any are left)
+                using (var cleanUpCmd = new MySqlCommand(@"
+            DELETE FROM favorites WHERE userID = @id;
+            DELETE FROM likes WHERE userID = @id;
+        ", connection))
+                {
+                    cleanUpCmd.Parameters.AddWithValue("@id", id);
+                    cleanUpCmd.ExecuteNonQuery();
+                }
+
+                // 4. Finally, delete the user
+                using (var deleteUserCmd = new MySqlCommand("DELETE FROM users WHERE UserID = @id", connection))
+                {
+                    deleteUserCmd.Parameters.AddWithValue("@id", id);
+                    int rowsAffected = deleteUserCmd.ExecuteNonQuery();
+
+                    if (rowsAffected > 0)
+                        return Ok(new { Message = "User deleted successfully" });
+                    else
+                        return NotFound(new { Message = "User not found" });
                 }
             }
             catch (Exception ex)
@@ -287,6 +313,7 @@ namespace TabsApp.Controllers
                 return StatusCode(500, new { Message = "Internal server error" });
             }
         }
+
 
 
 
